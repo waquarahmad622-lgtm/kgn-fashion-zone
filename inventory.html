@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="hi"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#b70d19"><meta name="robots" content="noindex,nofollow">
+<title>K.G.N. Fashion Zone · Secure Cloud Inventory V12 (Single File)</title>
+<link rel="icon" href="./icon-192.png">
+<style>
+:root{--red:#c91c27;--yellow:#ffde38;--ink:#202532;--muted:#697286;--line:#e7e9f1;--shadow:0 14px 35px #23263512}*{box-sizing:border-box}body{margin:0;background:#f5f6fa;color:var(--ink);font-family:system-ui,-apple-system,'Noto Sans Devanagari','Noto Sans Arabic',sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.top{background:linear-gradient(100deg,#9d101d,#d32e2b);color:#fff;display:flex;align-items:center;gap:12px;padding:11px max(14px,calc((100vw - 860px)/2))}.top img{width:49px;height:49px;object-fit:cover;border-radius:14px;background:#fff}.top strong{display:block}.top small{font-size:10px;letter-spacing:2px;color:#ffdf80;font-weight:850}.top a{margin-left:auto;padding:8px;border:1px solid #ffffff60;border-radius:10px;font-size:12px}.wrap{max-width:860px;margin:20px auto;padding:0 13px 40px}.status{padding:12px 15px;background:#fff3d0;color:#815313;border:1px solid #f4da8b;border-radius:15px;margin-bottom:15px;font-size:13px;font-weight:750}.status.ok{background:#e8f7ee;color:#14663c;border-color:#b7e2c9}.status.error{background:#ffe9e7;color:#8f1420;border-color:#fac7c0}.panel{background:#fff;border-radius:22px;padding:19px;border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:15px}h1{font-size:23px;margin:0 0 9px}h2{font-size:17px;margin:0 0 13px}p{font-size:13px;color:var(--muted);line-height:1.55}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px}.bar h2{margin:0}.bar>div p{margin:2px 0 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:15px}.stats>div{border:1px solid var(--line);border-radius:16px;background:#fff;padding:13px;box-shadow:var(--shadow)}.stats small{color:var(--muted);display:block;font-size:11px}.stats strong{display:block;font-size:27px;color:var(--red);margin-top:5px}.primary,.ghost,.danger{border:0;border-radius:12px;padding:11px 13px;font-weight:900;min-height:42px;font-size:12px}.primary{background:var(--red);color:#fff}.ghost{background:#f1f3f8;color:#293245}.danger{background:#ffe9e9;color:#a0121a}.full{width:100%;margin-top:15px}label{display:block;font-weight:800;font-size:12px;margin:11px 0 5px}input:not([type=checkbox]):not([type=file]),select,textarea{display:block;width:100%;border:1px solid #dce0e9;background:#fcfdff;border-radius:12px;padding:11px;color:var(--ink);margin-top:5px;min-height:43px}input[type=file]{display:block;max-width:100%;margin-top:9px}.grid2,.grid3{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}.items{display:grid;gap:8px;margin-top:16px}.item{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:13px;padding:9px}.item img{width:60px;height:60px;object-fit:cover;border-radius:10px;background:#f9f2dd}.item>div{flex:1;min-width:0}.item strong{font-size:13px;display:block;overflow-wrap:anywhere}.item small{font-size:11px;color:var(--muted);display:block;margin-top:4px}.item button{border:1px solid #e1d9d9;background:#fff;color:var(--red);border-radius:10px;padding:9px;font-weight:850}.badge{display:inline-block;font-size:10px;border-radius:99px;padding:4px 8px;background:#e7f7ee;color:#16633d}.badge.draft{background:#fff2d5;color:#815810}.toggles{display:flex;flex-wrap:wrap;gap:14px;margin:15px 0}.toggles label,.toggle{display:flex;gap:7px;align-items:center;margin:0}.photo-preview img{max-width:170px;max-height:200px;border-radius:11px;margin:9px 0}.hint{background:#fff4d1;padding:11px;border-radius:12px;color:#76510d}.foot{font-size:11px;color:#7c8495}.bar button{flex-shrink:0}[hidden]{display:none!important}@media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}.top a{font-size:10px}.bar{flex-wrap:wrap}.bar h2{flex:1}}
+
+.inventory-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0}
+.inventory-kpis>div{border:1px solid var(--line);border-radius:14px;background:#fdf9ef;padding:12px}
+.inventory-kpis small{display:block;color:var(--muted);font-size:11px}
+.inventory-kpis strong{display:block;color:var(--red);font-size:21px;margin-top:4px}
+.inventory-balance{background:#fff6d6;padding:11px 12px;border-radius:12px;color:#6e4911;font-weight:700}
+.movement-list{display:grid;gap:8px}.movement{padding:11px;border:1px solid var(--line);border-radius:12px;background:#fbfcff}
+.movement strong,.movement small{display:block}.movement strong{color:#283244;font-size:13px}.movement small{font-size:11px;color:#64748b;margin-top:4px}.movement p{margin:5px 0 0;overflow-wrap:anywhere}
+input:disabled{background:#eef0f3!important;color:#7a8290!important}
+
+</style>
+<script src="./cloud-config.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
+</head><body>
+<header class="top"><img src="./logo.png" alt="K.G.N. logo"><div><strong>K.G.N. Fashion Zone</strong><small>SECURE CLOUD INVENTORY V12</small></div><a href="./index.html">← ग्राहक ऐप</a></header>
+<main class="wrap">
+<div id="status" role="status" class="status">कनेक्शन जाँचा जा रहा है…</div>
+<section id="loginPanel" class="panel" hidden>
+ <h1>🔒 Admin Login</h1><p>केवल Supabase में अनुमति प्राप्त Owner/Staff यहाँ प्रवेश कर सकते हैं।</p>
+ <form id="loginForm" autocomplete="on"><label for="email">ईमेल</label><input id="email" type="email" autocomplete="username" required placeholder="owner@example.com">
+ <label for="password">पासवर्ड</label><input id="password" type="password" autocomplete="current-password" required minlength="8" placeholder="••••••••">
+ <button type="submit" class="primary full" id="loginBtn">सुरक्षित लॉगिन करें</button></form>
+ <p class="foot">इस पेज में नया Admin बनाने का सार्वजनिक विकल्प नहीं है। Owner को Supabase Dashboard के माध्यम से अनुमति दें।</p>
+</section>
+<section id="adminPanel" hidden>
+ <div class="bar"><div><h1>Cloud Product Manager</h1><p id="signedInAs"></p></div><button id="logoutBtn" class="ghost">Log out</button></div>
+ <div class="stats"><div><small>कुल प्रोडक्ट</small><strong id="totalCount">0</strong></div><div><small>Published</small><strong id="liveCount">0</strong></div><div><small>Drafts</small><strong id="draftCount">0</strong></div></div>
+ <div class="panel"><div class="bar"><h2>Product Listing</h2><button id="newBtn" class="primary">＋ नया प्रोडक्ट</button></div><div id="productList" class="items"></div></div>
+ <section class="panel" id="inventoryPanel" aria-label="Secure stock ledger">
+  <div class="bar"><div><h2>📦 Secure Cloud Inventory</h2><p>Stock changes are saved with timestamp and owner audit history.</p></div><button id="reloadInventory" class="ghost" type="button">↻ Refresh</button></div>
+  <div class="inventory-kpis"><div><small>Counted SKUs</small><strong id="inventoryTotal">0</strong></div><div><small>Out of stock</small><strong id="inventoryZero">0</strong></div><div><small>Not counted</small><strong id="inventoryUnknown">0</strong></div></div>
+  <form id="inventoryForm">
+    <label for="invProduct">Product<select id="invProduct" required></select></label>
+    <p class="inventory-balance">Current balance: <strong id="invCurrent">—</strong></p>
+    <div class="grid2"><label for="invAction">Action<select id="invAction"><option value="opening">Opening stock (first count)</option><option value="purchase">Stock received (+)</option><option value="sale">Sale / Dispatch (−)</option><option value="return">Return received (+)</option><option value="damage">Damaged / Lost (−)</option><option value="correction">Correction (set verified total)</option></select></label><label for="invQty"><span id="invQtyLabel">Quantity</span><input id="invQty" type="number" min="0" max="10000000" step="1" required inputmode="numeric" placeholder="Whole number"></label></div>
+    <label for="invNote">Reference / reason (required for damage and correction)<textarea id="invNote" maxlength="240" rows="2" placeholder="e.g. received from supplier; invoice number, physical count"></textarea></label>
+    <button id="invApply" class="primary full" type="submit">☁️ Apply secure stock change</button>
+  </form>
+  <h3 style="margin:21px 0 8px">Recent movements (selected product)</h3><div id="invHistory" class="movement-list" aria-live="polite"></div>
+  <p class="foot">WhatsApp enquiries are not confirmed orders and do not automatically reduce stock. Use Sale/Dispatch only after an actual sale or stock dispatch.</p>
+ </section>
+ <form id="productForm" class="panel" hidden>
+  <div class="bar"><h2 id="formTitle">नया प्रोडक्ट</h2><button id="cancelBtn" class="ghost" type="button">रद्द</button></div>
+  <p class="hint">पहले वास्तविक फोटो लगाएँ और सेव करें। Publish करने पर ही ग्राहकों को दिखेगा।</p>
+  <div class="grid3"><label>नाम — हिन्दी<input id="name_hi" maxlength="100" required></label><label>Name — English<input id="name_en" maxlength="100" required></label><label>نام — اردو<input id="name_ur" maxlength="100" required dir="rtl"></label></div>
+  <div class="grid3"><label>विवरण — हिन्दी<textarea id="desc_hi" maxlength="300" rows="3"></textarea></label><label>Description — English<textarea id="desc_en" maxlength="300" rows="3"></textarea></label><label>تفصیل — اردو<textarea id="desc_ur" maxlength="300" rows="3" dir="rtl"></textarea></label></div>
+  <div class="grid2"><label>SKU<input id="sku" maxlength="40" placeholder="KGN-001"></label><label>कैटेगरी<select id="category"><option value="ladies">Ladies</option><option value="gents">Gents</option><option value="kids">Kids</option></select></label></div>
+  <div class="grid3"><label>Wholesale Rate ₹<input id="rate" type="number" min="0" step="0.01" placeholder="Rate on enquiry"></label><label>Sale Rate ₹<input id="sale_rate" type="number" min="0" step="0.01" placeholder="Optional"></label><label>MOQ<input id="moq" type="number" min="1" max="100000" step="1" placeholder="Optional"></label></div>
+  <div class="grid2"><label>Rate unit<select id="unit"><option value="piece">Piece</option><option value="set">Set</option><option value="dozen">Dozen</option></select></label><label>Stock Qty (managed in Inventory)<input id="stock_qty" type="number" readonly disabled placeholder="Use inventory panel"></label></div>
+  <label>असली Product Photo (JPEG, PNG, WebP — max input 10 MB)<input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label><div id="photoPreview" class="photo-preview"></div>
+  <div class="toggles"><label><input type="checkbox" id="is_new"> New Arrival</label><label><input type="checkbox" id="is_featured"> Featured</label><label><input type="checkbox" id="published"> Published / ग्राहकों को दिखाएँ</label></div>
+  <div class="bar"><button id="saveBtn" type="submit" class="primary">☁️ Cloud में सेव करें</button><button id="archiveBtn" type="button" class="danger" hidden>Unpublish / Archive</button></div>
+ </form>
+ <div class="panel"><h2>Store Display Settings</h2><label class="toggle"><input id="festiveEnabled" type="checkbox"> Seasonal/Festive banner दिखाएँ</label><button id="saveSettings" class="primary" type="button">Cloud Settings सेव करें</button></div>
+ <p class="foot">Admin actions are enforced by database RLS, not by hiding buttons. Product photos are publicly accessible once uploaded because they are in a public-display image bucket. Do not upload confidential photos.</p>
+</section>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const config=window.KGN_CLOUD_CONFIG||{};
+const configured=/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(config.url||'')&&/^(sb_publishable_|eyJ)/.test(config.publishableKey||'');
+let db=null, sessionUser=null, products=[], editId=null, currentImagePath='', selectedFile=null, busy=false;
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function status(message,type=''){const el=$('status');el.className='status '+type;el.textContent=message}
+function showLogin(){ $('loginPanel').hidden=false; $('adminPanel').hidden=true; $('password').value=''; }
+function showAdmin(){ $('loginPanel').hidden=true; $('adminPanel').hidden=false; $('signedInAs').textContent=sessionUser?.email||''; }
+function setBusy(isBusy){busy=isBusy;$('saveBtn').disabled=isBusy;$('loginBtn').disabled=isBusy;$('saveSettings').disabled=isBusy;$('invApply').disabled=isBusy;}
+function validUrl(path){return path&&/^products\/[0-9a-f-]{36}\.jpg$/.test(path)?db.storage.from('product-photos').getPublicUrl(path).data.publicUrl:'./logo.png'}
+function showPhoto(path){$('photoPreview').innerHTML='';if(path){const img=document.createElement('img');img.src=validUrl(path);img.alt='Product photo preview';$('photoPreview').append(img)}}
+async function checkOwner(user){if(!user)return false;const {data,error}=await db.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();if(error)throw error;return !!data}
+async function loadAdmin(){const {data,error}=await db.from('products').select('*').order('updated_at',{ascending:false}).limit(250);if(error)throw error;products=data||[];const ss=await db.from('store_settings').select('festive_enabled').eq('id',1).maybeSingle();if(ss.error)throw ss.error;$('festiveEnabled').checked=ss.data?.festive_enabled!==false;renderList(); await renderInventory();}
+function renderList(){const total=products.length,live=products.filter(p=>p.published).length;$('totalCount').textContent=total;$('liveCount').textContent=live;$('draftCount').textContent=total-live;$('productList').replaceChildren();if(!total){const p=document.createElement('p');p.textContent='अभी Cloud में कोई प्रोडक्ट नहीं है। “नया प्रोडक्ट” चुनें।';$('productList').append(p);return}for(const item of products){const row=document.createElement('div');row.className='item';const photo=document.createElement('img');photo.src=validUrl(item.image_path);photo.alt='';const info=document.createElement('div');const title=document.createElement('strong');title.textContent=item.name_hi||item.name_en||item.name_ur;const sub=document.createElement('small');sub.textContent=[item.category,item.sku,item.published?'Published':'Draft',item.rate===null?'Rate on enquiry':'₹'+item.rate, item.stock_qty===null?'Stock not counted':'Stock: '+item.stock_qty].filter(Boolean).join(' · ');info.append(title,sub);const badge=document.createElement('span');badge.className='badge '+(item.published?'':'draft');badge.textContent=item.published?'LIVE':'DRAFT';const btn=document.createElement('button');btn.type='button';btn.textContent='Edit';btn.onclick=()=>openEditor(item.id);row.append(photo,info,badge,btn);$('productList').append(row)}}
+function openEditor(id=null){const p=products.find(x=>x.id===id);editId=p?.id||null;currentImagePath=p?.image_path||'';selectedFile=null;$('photo').value='';$('formTitle').textContent=p?'प्रोडक्ट अपडेट करें':'नया प्रोडक्ट जोड़ें';for(const l of ['hi','en','ur']){$('name_'+l).value=p?.['name_'+l]||'';$('desc_'+l).value=p?.['desc_'+l]||''}$('sku').value=p?.sku||'';$('category').value=p?.category||'ladies';$('rate').value=p?.rate??'';$('sale_rate').value=p?.sale_rate??'';$('moq').value=p?.moq??'';$('unit').value=p?.unit||'piece';$('stock_qty').value=p?.stock_qty??'';$('is_new').checked=!!p?.is_new;$('is_featured').checked=!!p?.is_featured;$('published').checked=!!p?.published;$('archiveBtn').hidden=!p;$('productForm').hidden=false;showPhoto(currentImagePath);$('productForm').scrollIntoView({behavior:'smooth',block:'start'})}
+function closeEditor(){$('productForm').hidden=true;editId=null;selectedFile=null;currentImagePath='';$('photo').value=''}
+function readNum(id,{integer=false,min=0,max=100000000}={}){const v=$(id).value.trim();if(v==='')return null;const n=Number(v);if(!Number.isFinite(n)||n<min||n>max||(integer&&!Number.isInteger(n)))throw Error('रेट / MOQ / Stock के नंबर सही भरें।');return n}
+function formPayload(){const row={sku:$('sku').value.trim(),category:$('category').value,unit:$('unit').value,is_new:$('is_new').checked,is_featured:$('is_featured').checked,published:$('published').checked,updated_at:new Date().toISOString(),image_path:currentImagePath};for(const l of ['hi','en','ur']){row['name_'+l]=$('name_'+l).value.trim();row['desc_'+l]=$('desc_'+l).value.trim()}if(['hi','en','ur'].some(l=>!row['name_'+l]))throw Error('हिन्दी, English और Urdu — तीनों नाम भरें।');row.rate=readNum('rate',{max:99999999});row.sale_rate=readNum('sale_rate',{max:99999999});row.moq=readNum('moq',{integer:true,min:1,max:100000});/* stock_qty is changed exclusively using kgn_stock_action RPC. */if(row.sale_rate!==null&&(row.rate===null||row.sale_rate>=row.rate))throw Error('Sale Rate को सामान्य रेट से कम रखें।');if(row.published&&!row.image_path&&!selectedFile)throw Error('Publish करने से पहले असली product photo चुनें।');return row}
+async function imageBlob(file){if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024)throw Error('केवल JPG/PNG/WebP, अधिकतम 10 MB input।');let bitmap;try{bitmap=await createImageBitmap(file)}catch{throw Error('इस फोटो को पढ़ा नहीं जा सका। दूसरी फोटो चुनें।')}const scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(bitmap.width*scale));c.height=Math.max(1,Math.round(bitmap.height*scale));const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(bitmap,0,0,c.width,c.height);bitmap.close();const blob=await new Promise(resolve=>c.toBlob(resolve,'image/jpeg',.82));if(!blob||blob.size>2*1024*1024)throw Error('Compressed फोटो 2 MB से बड़ी है। छोटी फोटो चुनें।');return blob}
+async function saveProduct(e){e.preventDefault();if(busy)return;setBusy(true);let uploaded=null;try{if(!sessionUser)throw Error('फिर से login करें।');const row=formPayload();if(selectedFile){const blob=await imageBlob(selectedFile);uploaded='products/'+crypto.randomUUID()+'.jpg';const up=await db.storage.from('product-photos').upload(uploaded,blob,{contentType:'image/jpeg',upsert:false,cacheControl:'3600'});if(up.error)throw up.error;row.image_path=uploaded}const q=editId?db.from('products').update(row).eq('id',editId).select().single():db.from('products').insert(row).select().single();const {error}=await q;if(error)throw error;status('✓ Product saved in Cloud. Customers will see it after refreshing if Published.','ok');closeEditor();await loadAdmin()}catch(err){console.error(err);status('Save failed: '+(err.message||'Unknown error'),'error');if(uploaded){await db.storage.from('product-photos').remove([uploaded]).catch(()=>{});}}finally{setBusy(false)}}
+async function archiveProduct(){if(!editId||busy)return;if(!confirm('यह प्रोडक्ट ग्राहकों से हट जाएगा। जारी रखें?'))return;setBusy(true);try{const {error}=await db.from('products').update({published:false,updated_at:new Date().toISOString()}).eq('id',editId);if(error)throw error;status('Product archived (unpublished).','ok');closeEditor();await loadAdmin()}catch(err){status(err.message||'Archive failed','error')}finally{setBusy(false)}}
+async function saveSettings(){if(busy)return;setBusy(true);try{const {error}=await db.from('store_settings').update({festive_enabled:$('festiveEnabled').checked,updated_at:new Date().toISOString()}).eq('id',1);if(error)throw error;status('✓ Seasonal banner setting updated for all customers.','ok')}catch(err){status(err.message||'Settings failed','error')}finally{setBusy(false)}}
+async function doLogin(e){e.preventDefault();if(busy)return;setBusy(true);try{const email=$('email').value.trim();const password=$('password').value;const {data,error}=await db.auth.signInWithPassword({email,password});if(error)throw Error('Login failed. Check credentials.');const user=data.user;if(!(await checkOwner(user))){await db.auth.signOut();throw Error('यह account Admin allowlist में नहीं है।')}sessionUser=user;showAdmin();status('✓ Authorized cloud admin login.','ok');await loadAdmin()}catch(err){status(err.message||'Login failed','error');showLogin()}finally{setBusy(false)}}
+const invActions={opening:'Opening',purchase:'Received',sale:'Sale/Dispatch',return:'Return',damage:'Damaged/Lost',correction:'Correction'};
+function stockText(p){return p?.stock_qty===null || p?.stock_qty===undefined ? 'Not counted' : p.stock_qty+' '+(p.unit||'unit');}
+function renderInventoryStats(){const known=products.filter(p=>p.stock_qty!==null),unknown=products.length-known.length;
+  $('inventoryTotal').textContent=known.length;
+  $('inventoryZero').textContent=known.filter(p=>p.stock_qty===0).length;
+  $('inventoryUnknown').textContent=unknown;
+}
+async function renderInventory(){renderInventoryStats();const select=$('invProduct'),previous=select.value;select.replaceChildren();
+  if(!products.length){const opt=document.createElement('option');opt.value='';opt.textContent='Add a product first';select.append(opt);$('invCurrent').textContent='—';$('invHistory').textContent='No products yet.';$('invApply').disabled=true;return;}
+  for(const p of products){const opt=document.createElement('option');opt.value=p.id;opt.textContent=(p.name_hi||p.name_en||p.sku)+' · '+(p.sku||p.category);select.append(opt);}
+  if(products.some(p=>p.id===previous))select.value=previous;
+  $('invApply').disabled=busy;await showInventoryForProduct();}
+async function showInventoryForProduct(){const p=products.find(x=>x.id===$('invProduct').value);$('invCurrent').textContent=stockText(p);
+  if(!p){$('invHistory').textContent='Select a product.';return;}
+  $('invAction').value=p.stock_qty===null?'opening':'purchase';syncInventoryAction();
+  $('invHistory').textContent='Loading history…';const {data,error}=await db.from('inventory_movements')
+    .select('action,delta,previous_qty,new_qty,note,created_at').eq('product_id',p.id)
+    .order('created_at',{ascending:false}).limit(30);
+  const host=$('invHistory');host.replaceChildren();
+  if(error){host.textContent='History unavailable: '+error.message;return;}
+  if(!data?.length){host.textContent='No movement yet. Enter opening stock if not counted.';return;}
+  for(const m of data){const row=document.createElement('div');row.className='movement';
+    const heading=document.createElement('strong');heading.textContent=(invActions[m.action]||m.action)+' · '+(m.delta>0?'+':'')+m.delta;
+    const sub=document.createElement('small');sub.textContent=(m.previous_qty===null?'Not counted':m.previous_qty)+' → '+m.new_qty+' · '+new Date(m.created_at).toLocaleString('en-IN');
+    row.append(heading,sub);if(m.note){const note=document.createElement('p');note.textContent=m.note;row.append(note);}host.append(row);}
+}
+function syncInventoryAction(){const action=$('invAction').value;const p=products.find(x=>x.id===$('invProduct').value);
+  $('invQtyLabel').textContent=action==='correction'?'Verified total stock':'Quantity';
+  $('invQty').min=['opening','correction'].includes(action)?'0':'1';
+  $('invQty').placeholder=action==='correction'?'Counted total after correction':'Whole number';
+  if(p && p.stock_qty===null && action!=='opening')status('First use Opening stock for a product that has never been counted.');
+}
+async function applyInventory(e){e.preventDefault();if(busy)return;
+  const id=$('invProduct').value,action=$('invAction').value,raw=$('invQty').value.trim(),qty=Number(raw),note=$('invNote').value.trim();
+  if(!id||raw===''||!Number.isSafeInteger(qty)||qty<0||qty>10000000){status('Enter a valid non-negative whole number.','error');return;}
+  if(!['opening','correction'].includes(action)&&qty===0){status('Quantity must be positive.','error');return;}
+  if(['damage','correction'].includes(action)&&!note){status('A note is required for damage or correction.','error');return;}
+  const p=products.find(x=>x.id===id);
+  if(!confirm((p?.name_hi||'Product')+' · '+(invActions[action]||action)+' · '+qty+'?\nThis will update cloud stock and the audit log.'))return;
+  setBusy(true);
+  try{const {data,error}=await db.rpc('kgn_stock_action',{p_product_id:id,p_action:action,p_quantity:qty,p_note:note});if(error)throw error;
+    $('invQty').value='';$('invNote').value='';status('✓ Stock saved in Cloud. New balance: '+data,'ok');
+    await loadAdmin();$('invProduct').value=id;await showInventoryForProduct();
+  }catch(err){console.error(err);status('Stock update failed: '+(err.message||'Unknown error'),'error');}
+  finally{setBusy(false);}
+}
+async function boot(){if(!configured){status('Setup required: cloud-config.js में Supabase URL और publishable key भरें।','error');showLogin();$('loginBtn').disabled=true;return}if(!window.supabase?.createClient){status('Supabase library नहीं मिली। Internet के साथ HTTPS पर पेज खोलें।','error');showLogin();$('loginBtn').disabled=true;return}db=window.supabase.createClient(config.url,config.publishableKey,{auth:{storage:window.sessionStorage,storageKey:'kgn-admin-session',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});$('loginForm').addEventListener('submit',doLogin);$('logoutBtn').onclick=async()=>{await db.auth.signOut();sessionUser=null;showLogin();status('Logged out.','ok')};$('newBtn').onclick=()=>openEditor();$('cancelBtn').onclick=closeEditor;$('productForm').addEventListener('submit',saveProduct);$('archiveBtn').onclick=archiveProduct;$('saveSettings').onclick=saveSettings;$('inventoryForm').addEventListener('submit',applyInventory);$('invProduct').addEventListener('change',showInventoryForProduct);$('invAction').addEventListener('change',syncInventoryAction);$('reloadInventory').onclick=()=>loadAdmin().catch(err=>status(err.message,'error'));$('photo').onchange=e=>{selectedFile=e.target.files?.[0]||null;if(selectedFile){if(selectedFile.size>10*1024*1024||!['image/jpeg','image/png','image/webp'].includes(selectedFile.type)){selectedFile=null;e.target.value='';status('Invalid photo type or size.','error');return}const preview=URL.createObjectURL(selectedFile);$('photoPreview').replaceChildren();const img=document.createElement('img');img.src=preview;img.onload=()=>URL.revokeObjectURL(preview);$('photoPreview').append(img)}else showPhoto(currentImagePath)};try{const {data,error}=await db.auth.getUser();if(error||!data?.user){showLogin();status('Owner के email/password से login करें।');return}if(!(await checkOwner(data.user))){await db.auth.signOut();showLogin();status('यह account Admin allowlist में नहीं है।','error');return}sessionUser=data.user;showAdmin();status('✓ Authorized cloud admin login.','ok');await loadAdmin()}catch(err){showLogin();status('Connection failed: '+(err.message||'Check setup'),'error')}}
+window.addEventListener('DOMContentLoaded',()=>boot().catch(e=>{console.error(e);status('Setup error.','error');showLogin()}));
+
+</script>
+</body></html>
