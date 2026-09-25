@@ -17,7 +17,7 @@
 input:disabled{background:#eef0f3!important;color:#7a8290!important}
 
 </style>
-<script src="./cloud-config.js" defer></script>
+<script src="./cloud-config.js?v=12.1" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 
 </head><body>
@@ -67,8 +67,8 @@ input:disabled{background:#eef0f3!important;color:#7a8290!important}
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-const config=window.KGN_CLOUD_CONFIG||{};
-const configured=/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(config.url||'')&&/^(sb_publishable_|eyJ)/.test(config.publishableKey||'');
+let config={}; // Resolved after deferred cloud-config.js has loaded, not during HTML parsing.
+
 let db=null, sessionUser=null, products=[], editId=null, currentImagePath='', selectedFile=null, busy=false;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function status(message,type=''){const el=$('status');el.className='status '+type;el.textContent=message}
@@ -135,7 +135,24 @@ async function applyInventory(e){e.preventDefault();if(busy)return;
   }catch(err){console.error(err);status('Stock update failed: '+(err.message||'Unknown error'),'error');}
   finally{setBusy(false);}
 }
-async function boot(){if(!configured){status('Setup required: cloud-config.js में Supabase URL और publishable key भरें।','error');showLogin();$('loginBtn').disabled=true;return}if(!window.supabase?.createClient){status('Supabase library नहीं मिली। Internet के साथ HTTPS पर पेज खोलें।','error');showLogin();$('loginBtn').disabled=true;return}db=window.supabase.createClient(config.url,config.publishableKey,{auth:{storage:window.sessionStorage,storageKey:'kgn-admin-session',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});$('loginForm').addEventListener('submit',doLogin);$('logoutBtn').onclick=async()=>{await db.auth.signOut();sessionUser=null;showLogin();status('Logged out.','ok')};$('newBtn').onclick=()=>openEditor();$('cancelBtn').onclick=closeEditor;$('productForm').addEventListener('submit',saveProduct);$('archiveBtn').onclick=archiveProduct;$('saveSettings').onclick=saveSettings;$('inventoryForm').addEventListener('submit',applyInventory);$('invProduct').addEventListener('change',showInventoryForProduct);$('invAction').addEventListener('change',syncInventoryAction);$('reloadInventory').onclick=()=>loadAdmin().catch(err=>status(err.message,'error'));$('photo').onchange=e=>{selectedFile=e.target.files?.[0]||null;if(selectedFile){if(selectedFile.size>10*1024*1024||!['image/jpeg','image/png','image/webp'].includes(selectedFile.type)){selectedFile=null;e.target.value='';status('Invalid photo type or size.','error');return}const preview=URL.createObjectURL(selectedFile);$('photoPreview').replaceChildren();const img=document.createElement('img');img.src=preview;img.onload=()=>URL.revokeObjectURL(preview);$('photoPreview').append(img)}else showPhoto(currentImagePath)};try{const {data,error}=await db.auth.getUser();if(error||!data?.user){showLogin();status('Owner के email/password से login करें।');return}if(!(await checkOwner(data.user))){await db.auth.signOut();showLogin();status('यह account Admin allowlist में नहीं है।','error');return}sessionUser=data.user;showAdmin();status('✓ Authorized cloud admin login.','ok');await loadAdmin()}catch(err){showLogin();status('Connection failed: '+(err.message||'Check setup'),'error')}}
+async function boot(){
+  // Deferred scripts run after the inline script; read their globals only now.
+  const raw=window.KGN_CLOUD_CONFIG;
+  if(!raw || typeof raw!=='object'){
+    status('Cloud configuration load नहीं हुई। GitHub पर cloud-config.js नाम की file और उसका path जाँचें।','error');
+    showLogin();$('loginBtn').disabled=true;return;
+  }
+  config={
+    url:String(raw.url||'').trim().replace(/\/+$/,''),
+    publishableKey:String(raw.publishableKey||'').trim()
+  };
+  const urlOK=/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(config.url);
+  const keyOK=/^(sb_publishable_|eyJ)/.test(config.publishableKey);
+  if(!urlOK || !keyOK){
+    status('Cloud settings का format सही नहीं है। Project URL और Publishable Key जाँचें; secret key न डालें।','error');
+    showLogin();$('loginBtn').disabled=true;return;
+  }
+if(!window.supabase?.createClient){status('Supabase library नहीं मिली। Internet के साथ HTTPS पर पेज खोलें।','error');showLogin();$('loginBtn').disabled=true;return}db=window.supabase.createClient(config.url,config.publishableKey,{auth:{storage:window.sessionStorage,storageKey:'kgn-admin-session',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});$('loginForm').addEventListener('submit',doLogin);$('logoutBtn').onclick=async()=>{await db.auth.signOut();sessionUser=null;showLogin();status('Logged out.','ok')};$('newBtn').onclick=()=>openEditor();$('cancelBtn').onclick=closeEditor;$('productForm').addEventListener('submit',saveProduct);$('archiveBtn').onclick=archiveProduct;$('saveSettings').onclick=saveSettings;$('inventoryForm').addEventListener('submit',applyInventory);$('invProduct').addEventListener('change',showInventoryForProduct);$('invAction').addEventListener('change',syncInventoryAction);$('reloadInventory').onclick=()=>loadAdmin().catch(err=>status(err.message,'error'));$('photo').onchange=e=>{selectedFile=e.target.files?.[0]||null;if(selectedFile){if(selectedFile.size>10*1024*1024||!['image/jpeg','image/png','image/webp'].includes(selectedFile.type)){selectedFile=null;e.target.value='';status('Invalid photo type or size.','error');return}const preview=URL.createObjectURL(selectedFile);$('photoPreview').replaceChildren();const img=document.createElement('img');img.src=preview;img.onload=()=>URL.revokeObjectURL(preview);$('photoPreview').append(img)}else showPhoto(currentImagePath)};try{const {data,error}=await db.auth.getUser();if(error||!data?.user){showLogin();status('Owner के email/password से login करें।');return}if(!(await checkOwner(data.user))){await db.auth.signOut();showLogin();status('यह account Admin allowlist में नहीं है।','error');return}sessionUser=data.user;showAdmin();status('✓ Authorized cloud admin login.','ok');await loadAdmin()}catch(err){showLogin();status('Connection failed: '+(err.message||'Check setup'),'error')}}
 window.addEventListener('DOMContentLoaded',()=>boot().catch(e=>{console.error(e);status('Setup error.','error');showLogin()}));
 
 </script>
