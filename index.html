@@ -32,7 +32,45 @@
 <div class="section-head"><div><span class="overline" data-i="browseBy">EXPLORE</span><h2 data-i="shopByCategory">कैटेगरी चुनें</h2></div><button class="text-link" data-i="viewAll" data-page="catalog">सभी देखें →</button></div>
 <div class="categories" id="homeCategories"></div>
 <div class="section-head"><div><span class="overline" data-i="freshEdit">LATEST EDIT</span><h2 data-i="newArrivals">नई आवक</h2></div><button class="text-link" data-i="viewAll" data-page="new">सभी देखें →</button></div>
-<div id="homeNew"></div>
+<div id="homeNew"></div><!-- KGN WhatsApp Channel CTA: place immediately after <div id="homeNew"></div> in index.html -->
+<section class="kgn-channel-card" aria-label="K.G.N. Fashion Zone WhatsApp Channel" style="margin:18px 0;padding:17px;border-radius:20px;background:linear-gradient(115deg,#fff6cf,#ffffff);border:1px solid #f3d77a;box-shadow:0 8px 25px rgba(60,35,15,.08);">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+    <span aria-hidden="true" style="font-size:25px;">🎬</span>
+    <strong style="font-size:15px;color:#89202a;">K.G.N. Fashion Zone</strong>
+  </div>
+  <a id="kgnWhatsAppChannelButton"
+     href="https://whatsapp.com/channel/0029Va6BnpLKwqSX4MyHdJ0C"
+     target="_blank" rel="noopener noreferrer"
+     style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 16px;text-align:center;border-radius:14px;background:#128c59;color:#ffffff;font-weight:800;font-size:14px;line-height:1.5;text-decoration:none;">
+    <span aria-hidden="true">▶</span><span id="kgnChannelButtonText">नये फैन्सी कपड़ों का विडियो देखें</span><span aria-hidden="true">↗</span>
+  </a>
+</section>
+<script>
+(function () {
+  'use strict';
+  const labels = {
+    hi: 'नये फैन्सी कपड़ों का विडियो देखें',
+    en: 'Watch Videos of New Fancy Clothes',
+    ur: 'نئے فینسی کپڑوں کی ویڈیوز دیکھیں'
+  };
+  function updateChannelLabel(lang) {
+    const el = document.getElementById('kgnChannelButtonText');
+    if (el) { el.textContent = labels[lang] || labels.hi; el.setAttribute('lang', lang || 'hi'); el.setAttribute('dir', lang === 'ur' ? 'rtl' : 'auto'); }
+  }
+  document.addEventListener('click', function (e) {
+    const button = e.target.closest('[data-lang]');
+    if (button && Object.prototype.hasOwnProperty.call(labels, button.dataset.lang)) updateChannelLabel(button.dataset.lang);
+  }, true);
+  document.addEventListener('DOMContentLoaded', function () {
+    const selected = document.querySelector('[data-lang][aria-pressed="true"]');
+    let stored = 'hi';
+    try { stored = localStorage.getItem('kgn_lang') || 'hi'; } catch (e) {}
+    updateChannelLabel(selected ? selected.dataset.lang : stored);
+  });
+})();
+</script>
+
+
 <div class="section-head"><div><span class="overline">K.G.N. COLLECTIONS</span><h2 data-i="featuredBrands">हमारे कलेक्शन</h2></div></div>
 <div class="brands-strip"><span><img alt="KGN" src="./logo.png"/><strong>K.G.N. Fashion Zone</strong></span><span data-i="ladiesEdit">Ladies Edit</span><span data-i="gentsEdit">Gents Edit</span><span data-i="kidsEdit">Kids Edit</span></div>
 <div class="section-head"><div><span class="overline" data-i="curated">CURATED</span><h2 data-i="featured">फ़ीचर्ड कलेक्शन</h2></div><button class="text-link" data-i="viewAll" data-page="catalog">सभी देखें →</button></div>
