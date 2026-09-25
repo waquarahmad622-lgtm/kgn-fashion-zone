@@ -1,0 +1,12 @@
+KGN V12 SECURE INVENTORY — ANDROID SETUP
+
+1. Back up your current GitHub repository files and Supabase database. Never post passwords/secret keys.
+2. SQL Editor: run sql/03_inventory_prepare.sql once. Existing product stock values get opening records; uncounted NULL values stay unknown.
+3. On GitHub replace ONLY admin.js, admin.html, admin.css, sw.js (root). Commit changes. Do NOT replace cloud-config.js and do NOT upload sql/ folder to the public repository.
+4. In Chrome refresh the live /admin.html. If older page persists, open in Incognito or clear site cache. Login; check Inventory panel.
+5. Select a product. If current stock is Not counted, select Opening and enter VERIFIED stock (including 0). If known, use Purchase, Sale/Dispatch, Return, Damage, or Correction. Save. Confirm cloud balance and history.
+6. After the new admin works, run sql/04_inventory_lockdown.sql. It blocks direct client edits to products.stock_qty and product deletes.
+7. Run sql/05_inventory_verify.sql and check authenticated_can_directly_edit_stock=false.
+8. Test product edit (name/price/photo), opening stock, +1 purchase, -1 sale, too-large sale denial, logout/nonadmin cannot change stock, and customer refresh.
+9. Stock adjustments are manual; WhatsApp enquiries do not decrement inventory.
+This is setup-ready, not production-verified on your actual Supabase project or Android browser.
