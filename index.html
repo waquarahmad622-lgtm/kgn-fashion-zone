@@ -138,6 +138,118 @@ html[lang="ur"] #home .kgn-wa-float .kgn-wa-ur { display:inline; }
 <section aria-label="More" class="page" id="more"><div class="pad"><div class="section-head compact"><div><span class="overline">K.G.N. FASHION ZONE</span><h2 data-i="contact">संपर्क और जानकारी</h2></div></div><div class="information"><small data-i="address">दुकान का पता</small><p id="shopAddress">याक़ूब ढाबे के पीछे, याक़ूब बिरयानी के पास, ठीक मोटरसाइकिल स्टैंड के सामने, खान मार्केट, बरदहिया बाज़ार, खलीलाबाद, संत कबीर नगर, उत्तर प्रदेश 272175</p><a class="btn btn-red" data-i="openMap" href="https://www.google.com/maps/search/?api=1&amp;query=Khan+Market+Bardahiya+Bazar+Khalilabad" rel="noopener noreferrer" target="_blank">मैप खोलें ↗</a></div><div class="information"><small data-i="phone">मोबाइल नंबर</small><p dir="ltr">7905275441 · 8896213995</p><div class="two"><a class="btn btn-outline" href="tel:+917905275441">☎ 7905275441</a><a class="btn btn-outline" href="tel:+918896213995">☎ 8896213995</a></div></div><div class="information"><small data-i="important">महत्वपूर्ण सूचना</small><p data-i="branchFull">केवल थोक ग्राहकों के लिए। हमारी कोई दूसरी ब्रांच नहीं है। नक़लियों से सावधान। सामने मोटरसाइकिल स्टैंड पर पार्किंग करें।</p><a class="btn btn-whatsapp" data-i="whatsApp" href="https://wa.me/917905275441" rel="noopener noreferrer" target="_blank">WhatsApp</a></div><div class="information admin-launch"><small>SECURE CLOUD MANAGEMENT</small><h3>ऑनलाइन प्रोडक्ट मैनेजमेंट</h3><p>केवल अधिकृत Admin login के बाद cloud में प्रोडक्ट, फोटो, रेट और स्टॉक बदलें।</p><a class="btn btn-dark" href="./admin.html" rel="nofollow">🔒 Secure Admin Login</a></div><p class="footnote">K.G.N. Fashion Zone · Fashion is our identity.</p></div></section>
 
 </main>
+  <!-- K.G.N. V13: Fix Address & Contact navigation and add photo popup for every product card. Paste ONCE just before </body> in index.html. -->
+<style>
+  .product-card .photo-wrap img,
+  .cart-item img { cursor: zoom-in; }
+  .product-card .photo-wrap::after {
+    content: '⊕'; position: absolute; inset-inline-end: 9px; bottom: 9px;
+    display: grid; place-items: center; width: 30px; height: 30px;
+    border-radius: 50%; background: rgba(255,255,255,.93);
+    color: #b61c26; font-size: 23px; line-height: 1;
+    pointer-events: none; box-shadow: 0 2px 9px #0002;
+  }
+  #kgnPhotoViewer {
+    width: min(94vw, 850px); max-width: 94vw; max-height: 94dvh;
+    margin: auto; padding: 0; border: 0; border-radius: 19px;
+    overflow: hidden; background: #13161d; color: #fff;
+    box-shadow: 0 20px 65px #0008;
+  }
+  #kgnPhotoViewer::backdrop { background: rgba(6, 10, 18, .88); }
+  #kgnPhotoViewer .kgn-photo-content { position: relative; display: flex; flex-direction: column; max-height: 94dvh; }
+  #kgnPhotoViewer .kgn-photo-image {
+    display: block; width: 100%; max-height: calc(94dvh - 82px);
+    min-height: 90px; object-fit: contain; background: #13161d;
+  }
+  #kgnPhotoViewer .kgn-photo-caption {
+    margin: 0; padding: 15px 56px 15px 17px; font-size: 15px;
+    font-weight: 700; overflow-wrap: anywhere; color: #fff;
+  }
+  #kgnPhotoViewer .kgn-photo-close {
+    position: absolute; top: 11px; inset-inline-end: 11px;
+    width: 39px; height: 39px; z-index: 1;
+    display: grid; place-items: center; border: 1px solid #ffffff85;
+    border-radius: 50%; background: #c91c27; color: #fff;
+    font-size: 28px; line-height: 1; cursor: pointer;
+  }
+  body.kgn-photo-open { overflow: hidden; }
+</style>
+<dialog id="kgnPhotoViewer" aria-label="Product photo">
+  <div class="kgn-photo-content">
+    <button type="button" id="kgnPhotoClose" class="kgn-photo-close" aria-label="Close photo">×</button>
+    <img id="kgnPhotoImage" class="kgn-photo-image" alt="">
+    <p id="kgnPhotoCaption" class="kgn-photo-caption"></p>
+  </div>
+</dialog>
+<script>
+(function () {
+  'use strict';
+  function initKgnFix() {
+    // The existing contact details are in <section id="more">, not id="contact".
+    // Correct both the Address & Contact button and the home banner's Contact button.
+    if (document.getElementById('more')) {
+      document.querySelectorAll('[data-page="contact"]').forEach(function (button) {
+        button.setAttribute('data-page', 'more');
+      });
+    }
+    // Capture-phase fallback if a page button is inserted dynamically later.
+    document.addEventListener('click', function (event) {
+      const button = event.target.closest('[data-page="contact"]');
+      if (button && document.getElementById('more')) button.dataset.page = 'more';
+    }, true);
+
+    const viewer = document.getElementById('kgnPhotoViewer');
+    const enlarged = document.getElementById('kgnPhotoImage');
+    const caption = document.getElementById('kgnPhotoCaption');
+    const close = document.getElementById('kgnPhotoClose');
+    const selector = '.product-card .photo-wrap img, .cart-item img';
+    let sourceImage = null;
+
+    document.addEventListener('click', function (event) {
+      const thumb = event.target.closest(selector);
+      if (!thumb) return;
+      const source = thumb.currentSrc || thumb.src;
+      if (!source) return;
+      const card = thumb.closest('.product-card, .cart-item');
+      const productTitle = card && card.querySelector('.product-body h3, .cn b');
+      const name = (productTitle && productTitle.textContent.trim()) || thumb.alt || 'K.G.N. Fashion Zone';
+      const language = document.documentElement.lang;
+      const labels = {
+        hi: { view: 'प्रोडक्ट की फोटो', close: 'फोटो बंद करें' },
+        en: { view: 'Product photo', close: 'Close photo' },
+        ur: { view: 'پروڈکٹ کی تصویر', close: 'تصویر بند کریں' }
+      };
+      const label = labels[language] || labels.en;
+      sourceImage = thumb;
+      enlarged.src = source;
+      enlarged.alt = name;
+      caption.textContent = name;
+      viewer.setAttribute('aria-label', label.view);
+      close.setAttribute('aria-label', label.close);
+      if (!viewer.open) viewer.showModal();
+      document.body.classList.add('kgn-photo-open');
+      close.focus();
+    });
+    close.addEventListener('click', function () { viewer.close(); });
+    viewer.addEventListener('click', function (event) {
+      if (event.target === viewer) viewer.close();
+    });
+    viewer.addEventListener('close', function () {
+      document.body.classList.remove('kgn-photo-open');
+      enlarged.removeAttribute('src');
+      if (sourceImage && sourceImage.isConnected) sourceImage.focus({ preventScroll: true });
+      sourceImage = null;
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKgnFix, { once: true });
+  } else {
+    initKgnFix();
+  }
+})();
+</script>
+
+
 <nav aria-label="Main navigation" class="bottomnav"><button class="navbtn active" data-page="home"><span class="navicon">⌂</span><span data-i="home">होम</span></button><button class="navbtn" data-page="catalog"><span class="navicon">▦</span><span data-i="collection">कलेक्शन</span></button><button class="navbtn" data-page="new"><span class="navicon">✦</span><span data-i="newShort">नया</span></button><button class="navbtn" data-page="enquiry"><span class="navicon">🛒</span><span data-i="enquiry">इन्क्वायरी</span><b hidden="" id="cartCount">0</b></button><button class="navbtn" data-page="more"><span class="navicon">☰</span><span data-i="more">और</span></button></nav>
 <div aria-live="polite" class="toast" id="toast" role="status"></div>
 </div><script defer="defer" src="./cloud-config.js"></script><script defer="defer" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script defer="defer" src="./catalog-data.js"></script><script defer="defer" src="./customer.js"></script></body></html>
