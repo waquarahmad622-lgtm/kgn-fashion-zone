@@ -18,8 +18,14 @@ let toastTimer;
 function storeGet(k){try{return localStorage.getItem(k)}catch{return null}}
 function storeSet(k,v){try{localStorage.setItem(k,v)}catch{}}
 function toast(s){const e=$('toast');e.textContent=s;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),3000)}
-function imgSrc(s){if(/^\.\/assets\/[a-z0-9-]+\.png$/.test(s))('./assets/','./');
- ;if(typeof s==='string'&&cloudConfigured){try{const u=new URL(s),base=new URL(window.KGN_CLOUD_CONFIG.url);if(u.origin===base.origin&&u.pathname.startsWith('/storage/v1/object/public/product-photos/'))return u.href}catch{}}return './logo.png'}
+function imgSrc(s){
+ if(typeof s!=='string')return './logo.png';
+ // Legacy fallback photos live at repository root, not in an assets/ directory.
+ if(/^\.\/(?:assets\/)?[a-z0-9-]+\.png$/.test(s))return s.replace('./assets/','./');
+ // Keep the existing Supabase storage-origin allowlist for real product photos.
+ if(cloudConfigured){try{const u=new URL(s),base=new URL(window.KGN_CLOUD_CONFIG.url);if(u.origin===base.origin&&u.pathname.startsWith('/storage/v1/object/public/product-photos/'))return u.href}catch{}}
+ return './logo.png';
+}
 function setStatus(text,kind=''){const e=$('cloudStatus');e.className='cloud-state '+kind;e.textContent=text}
 function mapRow(r){const image=r.image_path?sb.storage.from('product-photos').getPublicUrl(r.image_path).data.publicUrl:'';return {id:r.id,sku:r.sku||'',name:{hi:r.name_hi,en:r.name_en,ur:r.name_ur},desc:{hi:r.desc_hi,en:r.desc_en,ur:r.desc_ur},category:r.category,image,rate:r.rate===null?null:Number(r.rate),saleRate:r.sale_rate===null?null:Number(r.sale_rate),moq:r.moq,unit:r.unit,isNew:r.is_new,isFeatured:r.is_featured,active:r.published,isSample:false,stockQty:r.stock_qty}}
 function sampleRows(){const d=DEFAULT_CATALOG;return d.products.map(p=>({...p,isSample:true,rate:null,saleRate:null,isNew:false}));}
