@@ -1,0 +1,1 @@
+K.G.N. Fashion Zone logo replacement. GitHub repository main/root mein ye 3 PNG files same names se replace karein: logo.png, icon-192.png, icon-512.png. ZIP ko directly GitHub par upload na karein, extract karke PNG upload karein. Purane logo icon ke liye browser cache clear karein ya Home Screen shortcut reinstall karein. Supabase/Inventory/config ko na badlein.
