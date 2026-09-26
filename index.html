@@ -248,6 +248,77 @@ html[lang="ur"] #home .kgn-wa-float .kgn-wa-ur { display:inline; }
   }
 })();
 </script>
+<!-- KGN V13 Language Fix: paste ONCE immediately before </body> in index.html -->
+<script>
+(() => {
+  'use strict';
+  const copy = {
+    hi: {
+      address: 'याक़ूब ढाबे के पीछे, याक़ूब बिरयानी के पास, ठीक मोटरसाइकिल स्टैंड के सामने, खान मार्केट, बरदहिया बाज़ार, खलीलाबाद, संत कबीर नगर, उत्तर प्रदेश 272175',
+      cloud: 'सुरक्षित क्लाउड प्रबंधन', heading: 'ऑनलाइन प्रोडक्ट मैनेजमेंट',
+      help: 'केवल अधिकृत एडमिन लॉगिन के बाद क्लाउड में प्रोडक्ट, फोटो, रेट और स्टॉक बदलें।',
+      login: '🔒 सुरक्षित एडमिन लॉगिन', synced: '✓ क्लाउड कैटलॉग सिंक हुआ', products: 'प्रोडक्ट',
+      loading: 'क्लाउड कैटलॉग से जानकारी लोड हो रही है…',
+      failure: 'क्लाउड कनेक्शन विफल। इंटरनेट और सेटिंग जाँचें। पुरानी स्टॉक जानकारी नहीं दिखाई जा रही है।',
+      demo: 'डेमो मोड · असली स्टॉक प्रकाशित करने से पहले Supabase सेट करें',
+      sdk: 'Supabase लाइब्रेरी उपलब्ध नहीं है। क्लाउड कैटलॉग के लिए इंटरनेट जरूरी है।'
+    },
+    en: {
+      address: 'Behind Yaqoob Dhaba, near Yaqoob Biryani, directly opposite the motorcycle stand, Khan Market, Bardahiya Bazar, Khalilabad, Sant Kabir Nagar, Uttar Pradesh 272175',
+      cloud: 'SECURE CLOUD MANAGEMENT', heading: 'Online product management',
+      help: 'Only authorized admins can update products, photos, prices and stock after signing in.',
+      login: '🔒 Secure Admin Login', synced: '✓ Cloud catalog synced', products: 'products',
+      loading: 'Loading cloud catalog…',
+      failure: 'Cloud connection failed. Check settings and internet; outdated stock is not shown.',
+      demo: 'DEMO MODE · configure Supabase before publishing real stock',
+      sdk: 'Supabase library unavailable. Internet is required for the cloud catalog.'
+    },
+    ur: {
+      address: 'یعقوب ڈھابے کے پیچھے، یعقوب بریانی کے پاس، موٹر سائیکل اسٹینڈ کے عین سامنے، خان مارکیٹ، بردہیا بازار، خلیل آباد، سنت کبیر نگر، اتر پردیش 272175',
+      cloud: 'محفوظ کلاؤڈ مینجمنٹ', heading: 'آن لائن پروڈکٹ مینجمنٹ',
+      help: 'صرف مجاز ایڈمن لاگ اِن کے بعد کلاؤڈ میں پروڈکٹس، تصاویر، قیمتیں اور اسٹاک تبدیل کر سکتے ہیں۔',
+      login: '🔒 محفوظ ایڈمن لاگ اِن', synced: '✓ کلاؤڈ کیٹلاگ سنک ہو گیا', products: 'پروڈکٹس',
+      loading: 'کلاؤڈ کیٹلاگ سے معلومات لوڈ ہو رہی ہیں…',
+      failure: 'کلاؤڈ کنکشن ناکام۔ سیٹنگز اور انٹرنیٹ چیک کریں؛ پرانا اسٹاک نہیں دکھایا جا رہا۔',
+      demo: 'ڈیمو موڈ · اصل اسٹاک شائع کرنے سے پہلے Supabase سیٹ کریں',
+      sdk: 'Supabase لائبریری دستیاب نہیں۔ کلاؤڈ کیٹلاگ کے لیے انٹرنیٹ ضروری ہے۔'
+    }
+  };
+  function update() {
+    const t = copy[document.documentElement.lang] || copy.hi;
+    const address = document.getElementById('shopAddress');
+    if (address && address.textContent !== t.address) address.textContent = t.address;
+    const admin = document.querySelector('.admin-launch');
+    if (admin) {
+      for (const [selector, key] of [['small','cloud'], ['h3','heading'], ['p','help'], ['a','login']]) {
+        const node = admin.querySelector(selector);
+        if (node && node.textContent !== t[key]) node.textContent = t[key];
+      }
+    }
+    const status = document.getElementById('cloudStatus');
+    if (status) {
+      const val = status.textContent.trim();
+      const count = val.match(/(?:synced|सिंक हुआ|سنک ہو گیا)\s*[·•]\s*(\d+)/i);
+      let message = null;
+      if (count) message = t.synced + ' · ' + count[1] + ' ' + t.products;
+      else if (/^(?:Cloud catalog से जानकारी|Loading cloud catalog|کلاؤڈ کیٹلاگ سے معلومات)/i.test(val)) message = t.loading;
+      else if (/^(?:Cloud connection failed|क्लाउड कनेक्शन विफल|کلاؤڈ کنکشن ناکام)/i.test(val)) message = t.failure;
+      else if (/^(?:DEMO MODE|डेमो मोड|ڈیمو موڈ)/i.test(val)) message = t.demo;
+      else if (/^(?:Supabase SDK unavailable|Supabase लाइब्रेरी उपलब्ध नहीं|Supabase لائبریری دستیاب نہیں)/i.test(val)) message = t.sdk;
+      if (message !== null && val !== message) status.textContent = message;
+    }
+  }
+  function init() {
+    update();
+    new MutationObserver(update).observe(document.documentElement, {attributes:true,attributeFilter:['lang']});
+    const status = document.getElementById('cloudStatus');
+    if (status) new MutationObserver(update).observe(status, {childList:true,characterData:true,subtree:true});
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
+  else init();
+})();
+</script>
+
 
 
 <nav aria-label="Main navigation" class="bottomnav"><button class="navbtn active" data-page="home"><span class="navicon">⌂</span><span data-i="home">होम</span></button><button class="navbtn" data-page="catalog"><span class="navicon">▦</span><span data-i="collection">कलेक्शन</span></button><button class="navbtn" data-page="new"><span class="navicon">✦</span><span data-i="newShort">नया</span></button><button class="navbtn" data-page="enquiry"><span class="navicon">🛒</span><span data-i="enquiry">इन्क्वायरी</span><b hidden="" id="cartCount">0</b></button><button class="navbtn" data-page="more"><span class="navicon">☰</span><span data-i="more">और</span></button></nav>
