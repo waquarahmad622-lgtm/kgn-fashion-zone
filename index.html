@@ -318,6 +318,34 @@ html[lang="ur"] #home .kgn-wa-float .kgn-wa-ur { display:inline; }
   else init();
 })();
 </script>
+<!-- K.G.N. Product Title + Description Popup: paste once before </body> in index.html -->
+<style>
+.product-card .product-body h3 {display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;cursor:pointer}
+.product-card .product-body p {display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.product-card .product-body h3:focus-visible {outline:3px solid #c91c27;outline-offset:3px;border-radius:4px}
+#kgnTextDetail {box-sizing:border-box;width:min(92vw,540px);max-height:85dvh;border:0;border-radius:18px;padding:0;background:#fff;color:#202630;box-shadow:0 16px 60px #0006;overflow:auto}
+#kgnTextDetail::backdrop {background:#111827b8}
+#kgnTextDetail .detail-head {position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;background:#fff;border-bottom:1px solid #e5e7eb}
+#kgnTextDetail .detail-head strong {color:#a90f1a;font-size:14px}
+#kgnTextDetail .detail-head button {width:38px;height:38px;border:0;border-radius:50%;background:#fbe9eb;color:#a90f1a;font-size:27px;cursor:pointer}
+#kgnTextDetail .detail-content {padding:19px;overflow-wrap:anywhere}
+#kgnTextDetailTitle {font-size:20px;line-height:1.4;margin:0 0 14px}
+#kgnTextDetailDesc {font-size:15px;line-height:1.65;white-space:pre-line;color:#535b68;margin:0}
+body.kgn-text-detail-open {overflow:hidden}
+</style>
+<dialog id="kgnTextDetail" aria-labelledby="kgnTextDetailTitle"><div class="detail-head"><strong id="kgnTextDetailLabel"></strong><button type="button" id="kgnTextDetailClose" aria-label="Close">×</button></div><div class="detail-content"><h2 id="kgnTextDetailTitle"></h2><p id="kgnTextDetailDesc"></p></div></dialog>
+<script>
+(function(){'use strict';
+const modal=document.getElementById('kgnTextDetail'),close=document.getElementById('kgnTextDetailClose'),title=document.getElementById('kgnTextDetailTitle'),desc=document.getElementById('kgnTextDetailDesc'),label=document.getElementById('kgnTextDetailLabel');let previous=null;
+function langLabels(){const l=document.documentElement.lang;return l==='ur'?{heading:'پروڈکٹ کی تفصیل',close:'بند کریں',empty:'تفصیل دستیاب نہیں'}:l==='en'?{heading:'Product details',close:'Close',empty:'Description not available'}:{heading:'प्रोडक्ट की पूरी जानकारी',close:'बंद करें',empty:'विवरण उपलब्ध नहीं है'};}
+function openDetail(h){const card=h.closest('.product-card');if(!card)return;const p=card.querySelector('.product-body p'),t=langLabels();previous=h;title.textContent=h.textContent.trim();desc.textContent=p&&p.textContent.trim()?p.textContent.trim():t.empty;label.textContent=t.heading;close.setAttribute('aria-label',t.close);if(!modal.open)modal.showModal();document.body.classList.add('kgn-text-detail-open');close.focus();}
+document.addEventListener('click',e=>{const h=e.target.closest('.product-card .product-body h3');if(h)openDetail(h)});
+document.addEventListener('keydown',e=>{const h=e.target.closest('.product-card .product-body h3');if(h&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDetail(h)}});
+const observer=new MutationObserver(()=>{document.querySelectorAll('.product-card .product-body h3:not([data-kgn-detail])').forEach(h=>{h.tabIndex=0;h.setAttribute('role','button');h.setAttribute('data-kgn-detail','');h.setAttribute('aria-haspopup','dialog')})});observer.observe(document.body,{childList:true,subtree:true});
+close.addEventListener('click',()=>modal.close());modal.addEventListener('click',e=>{if(e.target===modal)modal.close()});modal.addEventListener('close',()=>{document.body.classList.remove('kgn-text-detail-open');if(previous&&previous.isConnected)previous.focus();previous=null});
+})();
+</script>
+
 
 
 
