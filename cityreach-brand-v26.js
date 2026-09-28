@@ -5,9 +5,11 @@ const DEV_EMAIL='cityreachsolutions@gmail.com';
 const DEV_WHATSAPP='919651041100';
 
 const GMAIL_URL=
-  'https://mail.google.com/mail/?view=cm&fs=1&to='+
-  encodeURIComponent(DEV_EMAIL)+
-  '&su='+encodeURIComponent('App Development Enquiry');
+  'mailto:'+DEV_EMAIL+
+  '?subject='+encodeURIComponent('App Development Enquiry')+
+  '&body='+encodeURIComponent(
+    'Hello CityReach Solutions,\n\nMujhe app development / website development ke baare me enquiry karni hai.'
+  );
 
 const WHATSAPP_URL=
   'https://wa.me/'+DEV_WHATSAPP+
