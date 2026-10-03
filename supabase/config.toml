@@ -1,0 +1,4 @@
+[functions.kgn-payment]
+verify_jwt = false # The function validates the admin access token and allowlist itself.
+[functions.kgn-payment-webhook]
+verify_jwt = false # Provider HMAC verification is mandatory inside this function.
