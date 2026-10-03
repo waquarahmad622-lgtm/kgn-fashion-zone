@@ -9,7 +9,7 @@
       description: 'WhatsApp, Gmail या मैसेज से ऐप का लिंक भेजें।',
       whatsapp: 'WhatsApp', gmail: 'Gmail', sms: 'मैसेज', copy: 'लिंक कॉपी',
       native: 'और ऐप्स में शेयर करें', close: 'बंद करें', link: 'ऐप का लिंक',
-      email: 'अन्य ईमेल ऐप से भेजें', copied: 'लिंक कॉपी हो गया।',
+      email: 'अन्य ईमेल ऐप से भेजें', emailWeb: 'Gmail वेबसाइट में खोलें', copied: 'लिंक कॉपी हो गया।',
       manual: 'लिंक चुना गया है। उसे दबाकर रखें और कॉपी करें।',
       failed: 'यहाँ शेयर नहीं हो पाया। ऊपर कोई विकल्प चुनें या लिंक कॉपी करें।',
       message: 'K.G.N. Fashion Zone का ऐप खोलें और लेडीज़, जेंट्स व किड्स के फैंसी कपड़ों का कलेक्शन देखें। केवल थोक बिक्री।'
@@ -19,7 +19,7 @@
       description: 'Send the app link through WhatsApp, Gmail or Messages.',
       whatsapp: 'WhatsApp', gmail: 'Gmail', sms: 'Messages', copy: 'Copy link',
       native: 'Share in other apps', close: 'Close', link: 'App link',
-      email: 'Use another email app', copied: 'Link copied.',
+      email: 'Use another email app', emailWeb: 'Open Gmail website', copied: 'Link copied.',
       manual: 'Link selected. Press and hold it to copy.',
       failed: 'Sharing could not open. Choose an option above or copy the link.',
       message: 'Open the K.G.N. Fashion Zone app to browse ladies’, gents’ and kids’ fancy garments. Wholesale only.'
@@ -29,7 +29,7 @@
       description: 'واٹس ایپ، جی میل یا میسج سے ایپ کا لنک بھیجیں۔',
       whatsapp: 'واٹس ایپ', gmail: 'جی میل', sms: 'میسج', copy: 'لنک کاپی',
       native: 'دیگر ایپس میں شیئر کریں', close: 'بند کریں', link: 'ایپ کا لنک',
-      email: 'دوسری ای میل ایپ سے بھیجیں', copied: 'لنک کاپی ہو گیا۔',
+      email: 'دوسری ای میل ایپ سے بھیجیں', emailWeb: 'جی میل ویب سائٹ کھولیں', copied: 'لنک کاپی ہو گیا۔',
       manual: 'لنک منتخب ہے۔ اسے دبا کر رکھیں اور کاپی کریں۔',
       failed: 'شیئر نہیں ہو سکا۔ اوپر کوئی آپشن چنیں یا لنک کاپی کریں۔',
       message: 'کے جی این فیشن زون کی ایپ کھولیں اور لیڈیز، جینٹس اور بچوں کے فینسی کپڑوں کا کلیکشن دیکھیں۔ صرف ہول سیل۔'
@@ -64,10 +64,22 @@
       const body = encodeURIComponent(message);
       const subject = encodeURIComponent(APP_NAME);
       document.getElementById('kgnShareWhatsApp').href = 'https://wa.me/?text=' + body;
-      document.getElementById('kgnShareGmail').href = 'https://mail.google.com/mail/?view=cm&fs=1&su=' + subject + '&body=' + body;
-      document.getElementById('kgnShareEmail').href = 'mailto:?subject=' + subject + '&body=' + body;
       // iOS Messages uses &body; Android and other SMS handlers use ?body.
       const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const mobile = /Android/i.test(navigator.userAgent) || ios;
+      const emailDraft = 'mailto:?subject=' + subject + '&body=' + body;
+      const gmailWeb = 'https://mail.google.com/mail/?view=cm&fs=1&su=' + subject + '&body=' + body;
+      const gmail = document.getElementById('kgnShareGmail');
+      const emailFallback = document.getElementById('kgnShareEmail');
+      // A Gmail website link can lose the draft when handed to the mobile app.
+      // Use the phone's email composer directly, preserving the tap gesture.
+      // The recipient stays empty: the customer chooses whom to share with.
+      gmail.href = mobile ? emailDraft : gmailWeb;
+      gmail.target = mobile ? '_self' : '_blank';
+      emailFallback.href = mobile ? gmailWeb : emailDraft;
+      emailFallback.target = mobile ? '_blank' : '_self';
+      emailFallback.rel = 'noopener noreferrer';
+      emailFallback.textContent = mobile ? text.emailWeb : text.email;
       document.getElementById('kgnShareSms').href = 'sms:' + (ios ? '&' : '?') + 'body=' + body;
       link.value = APP_URL;
       native.hidden = typeof navigator.share !== 'function';
