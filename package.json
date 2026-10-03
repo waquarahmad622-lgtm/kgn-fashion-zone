@@ -1,0 +1,13 @@
+{
+  "name": "kgn-fashion-zone",
+  "private": true,
+  "version": "1.1.0",
+  "scripts": {
+    "test": "node tests/catalogue.cjs && node tests/database.mjs && node tests/payments.cjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14",
+    "jsdom": "26.1.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -3,12 +3,14 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#b70d19"><meta name="robots" content="noindex,nofollow">
 <title>K.G.N. Fashion Zone · Secure Cloud Inventory V12</title>
-<link rel="icon" href="./icon-192.png"><link rel="stylesheet" href="./admin.css">
+<link rel="icon" href="./icon-192.png"><link rel="stylesheet" href="./admin.css?v=34">
+<script src="./mobile-compat.js?v=32" defer></script>
 <script src="./cloud-config.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="./admin.js" defer></script>
-<script src="./admin-bundles.js?v=22" defer></script>
+<script src="./admin.js?v=34" defer></script>
+<script src="./admin-bundles.js?v=34" defer></script>
 <script src="./admin-inventory-v25.js?v=25" defer></script>
+<script src="./admin-orders.js?v=34" defer></script>
 <script src="./cityreach-brand-v26.js?v=28" defer></script>
 </head><body>
 <header class="top"><img src="./logo.png" alt="K.G.N. logo"><div><strong>K.G.N. Fashion Zone</strong><small>SECURE CLOUD ADMIN</small></div><a href="./index.html">← ग्राहक ऐप</a></header>
@@ -46,7 +48,8 @@
   <div class="grid2"><label>SKU<input id="sku" maxlength="40" placeholder="KGN-001"></label><label>कैटेगरी<select id="category"><option value="ladies">Ladies</option><option value="gents">Gents</option><option value="kids">Kids</option></select></label></div>
   <div class="grid3"><label>Wholesale Rate ₹<input id="rate" type="number" min="0" step="0.01" placeholder="Rate on enquiry"></label><label>Sale Rate ₹<input id="sale_rate" type="number" min="0" step="0.01" placeholder="Optional"></label><label>MOQ<input id="moq" type="number" min="1" max="100000" step="1" placeholder="Optional"></label></div>
   <div class="grid2"><label>Rate unit<select id="unit"><option value="piece">Piece</option><option value="set">Set</option><option value="dozen">Dozen</option></select></label><label>Stock Qty (managed in Inventory)<input id="stock_qty" type="number" readonly disabled placeholder="Use inventory panel"></label></div>
-  <label>असली Product Photo (JPEG, PNG, WebP — max input 10 MB)<input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label><div id="photoPreview" class="photo-preview"></div>
+  <label for="photo">Catalogue photos · अधिकतम 4 फोटो<input id="photo" type="file" multiple accept="image/jpeg,image/png,image/webp" aria-describedby="photoHelp"></label>
+  <p id="photoHelp" class="foot">JPG, PNG या WebP · प्रत्येक फोटो अधिकतम 10 MB। पहली फोटो cover बनेगी। बची जगह में और फोटो जोड़ें; नीचे से फोटो हटाएँ या cover चुनें।</p><p id="photoCount" role="status">0 / 4 photos</p><div id="photoPreview" class="photo-preview"></div>
   <div class="toggles"><label><input type="checkbox" id="is_new"> New Arrival</label><label><input type="checkbox" id="is_featured"> Featured</label><label><input type="checkbox" id="published"> Published / ग्राहकों को दिखाएँ</label></div>
   <div class="bar"><button id="saveBtn" type="submit" class="primary">☁️ Cloud में सेव करें</button><button id="archiveBtn" type="button" class="danger" hidden>Unpublish / Archive</button></div>
  </form>

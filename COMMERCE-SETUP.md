@@ -1,0 +1,28 @@
+# KGN catalogue and orders v34
+
+Implemented: up to four product images with cover selection/removal and customer gallery; original and selling price for each size; computed discounts; guest order requests; private tracking; owner confirmation and packing/dispatch/delivery stages; hosted Razorpay payment links with server-side verification; optional COD; order retention.
+
+## Deployment order
+
+1. Inspect the existing `products`, `admin_users`, inventory RLS and `kgn_stock_action(uuid,text,integer,text)` definitions in the Supabase project `vmvyubzpuncasirgjptn`. Tests use a representative local schema and do not establish that the production schema has the same types or policies. `size_options` must be `text[]`, `pack_options` integer arrays, `size_rates` JSONB, inventory quantities pieces. Check that owner/staff-only catalogue update policies are already enforced.
+2. Apply the four SQL migrations in filename order. They are additive; they keep existing covers and size selling prices. The order tables are private, and ordering/payment methods default to disabled. **Do not change public customer-data RLS to make setup work.**
+3. Publish the frontend files from this branch together. `inventory.html` redirects to the unified admin panel to prevent old editors from overriding the new gallery. The service worker v34 updates assets; admin responses and Supabase calls are never cached.
+4. Configure `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` using Supabase's private Edge Function secrets. Never put them in `cloud-config.js`, git or chat. Set `KGN_SITE_ORIGIN` to the actual web origin. Deploy both Edge Functions with the supplied config. `kgn-payment` verifies the admin session and allowlist inside the handler. The webhook verifies HMAC over the raw body.
+5. Configure the merchant webhook for `payment_link.paid` at the deployed `kgn-payment-webhook` URL. Start with the merchant test environment. Verify failed, successful, delayed and duplicate events; then configure live merchant keys. Provider confirmation is the only route to online `paid`. Opening a payment page alone never marks an order paid. No automated SMS/email is sent by this integration.
+6. In Supabase Cron, schedule `select public.kgn_purge_closed_orders()` daily (e.g. `15 3 * * *` UTC), and verify a successful scheduled run before enabling order requests. Review the order privacy notice and courier/payment arrangements. The closed operational order data retention is one year; statutory invoice/record obligations need separate business handling.
+7. Owner opens Admin → Orders → Order settings. Enable supported methods only: online after live setup, or COD only if the delivery arrangement supports collection. Keep order requests off until a complete test order and the policy review are complete.
+
+## Operations
+
+- A request is not a confirmed sale. Server prices are captured from current size rates. The store confirms stock and the final shipping charge; final shipping is locked afterwards.
+- Confirmation reserves quantities against other confirmed/packed app orders. Stock must have an opening count. These requests accept products priced per piece; set/dozen products continue using WhatsApp until explicitly supported.
+- Shipped requires courier and AWB, verified online payment (or COD), and calls the existing inventory Sale/Dispatch RPC in the same transaction. **Do not also record a manual Sale for the same app order.** Other manual inventory edits can reduce available stock; dispatch will fail if stock is insufficient.
+- Status must move one stage at a time. Courier status displayed in the app is updated by staff. The courier HTTPS tracking link provides the carrier's latest status. No automatic courier API is connected yet.
+- COD remains labelled payment due on delivery. It does not pretend collection was verified. Reconciliation, refunds, returns and cancellations after a payment link exists require the merchant/store workflow; this release does not automate those financial operations.
+- Payment link creation locks the order against duplicate creation. A timeout or uncertain result is held for manual gateway reconciliation; never reset it blindly or create another link without checking the gateway.
+- Customer tracking requires the order UUID and a random 256-bit private key. The server stores only its hash and does not expose buyer contact/address in tracking responses. The browser retains up to 20 tracking records. Lost keys require store-assisted identity verification; public phone-only lookup is intentionally absent.
+- Anonymous order requests have a per-phone rate limit of five/hour. Add a gateway/WAF challenge and broader request rate controls if abuse occurs; do not expose service-role credentials to callers.
+
+## Verification
+
+Run `npm ci && npm test`. Tests cover gallery controls and limits, upload rollback, saved-product refresh failure, size discounts, private order permissions, server totals, invalid size/quantity, idempotency, payment mismatches/HMAC, dispatch stock changes and retention. Database tests use PGlite with representative existing tables and a stock-function fixture. Live migrations, real mobile devices, real courier integration and live payments still require integration verification.
