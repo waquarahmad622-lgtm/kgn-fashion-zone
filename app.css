@@ -27,3 +27,53 @@
 .product-card .price-row { margin-top: auto; min-height: 25px; }
 .product-card .moq { min-height: 28px; }
 .product-card .add { margin-top: auto; flex-shrink: 0; }
+
+/* V31: complete, centered sample photos in home banners and category cards. */
+#heroSlides .hero-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(80px, 28%, 132px);
+  gap: 14px;
+  min-height: 246px;
+  padding: 20px 18px 26px;
+}
+#heroSlides .hero-content { max-width: none; }
+#heroSlides .hero-mosaic {
+  width: 100%;
+  min-width: 0;
+  gap: 10px;
+  align-self: center;
+  transform: none;
+}
+#heroSlides .hero-mosaic img,
+#heroSlides .hero-mosaic img:nth-child(2) {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  margin: 0;
+  object-fit: contain;
+  object-position: center;
+  transform: none;
+  padding: 3px;
+  border: 1px solid #ffffffb3;
+  border-radius: 12px;
+  background: #fffdf9;
+  box-shadow: 0 4px 12px #35090d1a;
+}
+#heroSlides .hero-stamp { width: 100%; }
+#homeCategories .category { min-width: 0; }
+#homeCategories .category img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  object-position: center;
+  padding: 3px;
+  background: #fffdf9;
+}
+@media (max-width: 360px) {
+  #heroSlides .hero-slide { gap: 10px; padding-inline: 14px; }
+  #heroSlides h1, #heroSlides h2 { font-size: 22px; }
+}
