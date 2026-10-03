@@ -219,7 +219,8 @@ html[lang="ur"] #home .kgn-wa-float .kgn-wa-ur { display:inline; }
 
     document.addEventListener('click', function (event) {
       const thumb = event.target.closest(selector);
-      if (!thumb) return;
+      // Catalogue cards use the multi-photo gallery; retain this viewer for enquiry images.
+      if (!thumb || thumb.closest('[data-gallery]')) return;
       const source = thumb.currentSrc || thumb.src;
       if (!source) return;
       const card = thumb.closest('.product-card, .cart-item');
@@ -389,4 +390,3 @@ close.addEventListener('click',()=>modal.close());modal.addEventListener('click'
 </dialog>
 <script src="./share-app.js?v=2" defer></script>
 </body></html>
-
