@@ -1,0 +1,27 @@
+/* App sharing: scoped styles keep catalogue and enquiry controls unchanged. */
+.kgn-share-trigger{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:60px;min-height:48px;padding:4px 6px;border:1px solid #efd274;border-radius:12px;background:#fff4c6;color:#86121d;font-size:10px;font-weight:800;line-height:1.25}
+.kgn-share-trigger svg{width:20px;height:20px}
+.kgn-share-trigger:hover{background:#ffe994}
+#kgnShareDialog{width:calc(100% - 24px);max-width:430px;max-height:85vh;max-height:85dvh;margin:auto;padding:22px;border:1px solid #f0e0ce;border-radius:22px;background:#fffdf8;color:#252936;box-shadow:0 20px 70px #11182755;overflow:auto}
+#kgnShareDialog::backdrop{background:#171b2aba}
+#kgnShareDialog .kgn-share-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+#kgnShareDialog .kgn-share-brand{margin:0 0 7px;color:#a11c28;font-size:11px;font-weight:900;letter-spacing:.5px}
+#kgnShareDialog h2{margin:0;font-size:22px;line-height:1.35}
+#kgnShareDialog .kgn-share-close{flex:none;width:44px;height:44px;padding:0;border:1px solid #ecd7d8;border-radius:50%;background:#fff;color:#9e1722;font-size:28px;line-height:1}
+#kgnShareDescription{margin:10px 0 18px;color:#5e6572;font-size:13px;line-height:1.6}
+#kgnShareDialog .kgn-share-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#kgnShareDialog .kgn-share-option{display:flex;align-items:center;justify-content:flex-start;gap:10px;min-height:60px;padding:12px;border:1px solid #e8e1d7;border-radius:14px;background:#fff;color:#2e3340;font:inherit;font-size:13px;font-weight:800;text-align:start;text-decoration:none;overflow-wrap:anywhere}
+#kgnShareDialog .kgn-share-option:hover{border-color:#c91c27;background:#fff7ed}
+#kgnShareDialog .kgn-share-option svg{flex:none;width:23px;height:23px}
+#kgnShareWhatsApp svg{color:#128c59}
+#kgnShareGmail svg{color:#c5221f}
+#kgnShareSms svg{color:#2466c6}
+#kgnShareCopy svg{color:#9e1722}
+#kgnShareNative{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:46px;margin-top:14px;padding:10px 14px;border:0;border-radius:12px;background:#c91c27;color:#fff;font:inherit;font-weight:800}
+#kgnShareNative:disabled{opacity:.65;cursor:wait}
+#kgnShareDialog .kgn-share-link-label{display:block;margin:17px 0 6px;color:#5e6572;font-size:12px;font-weight:700}
+#kgnShareLink{width:100%;min-height:42px;padding:9px 10px;border:1px solid #e6e0d7;border-radius:10px;background:#f8f5ef;color:#4c5260;font:12px/1.5 system-ui;direction:ltr;text-align:left}
+#kgnShareEmail{display:inline-flex;align-items:center;min-height:44px;margin-top:5px;color:#9e1722;font-size:12px;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+#kgnShareStatus{min-height:20px;margin:5px 0 0;color:#385d43;font-size:12px;line-height:1.5}
+body.kgn-share-open{overflow:hidden}
+@media(max-width:360px){.mast-top{gap:7px}.kgn-share-trigger{min-width:55px;padding-inline:4px}.mast-title strong{font-size:15px}#kgnShareDialog{padding:18px}#kgnShareDialog .kgn-share-option{gap:7px;padding:10px;font-size:12px}}
