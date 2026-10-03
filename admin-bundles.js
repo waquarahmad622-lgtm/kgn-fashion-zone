@@ -6,16 +6,17 @@ const $=id=>document.getElementById(id);
 if(!document.querySelector('link[data-kgn-pack-style]')){
   const l=document.createElement('link');l.rel='stylesheet';l.href='./bundle.css?v=22';l.dataset.kgnPackStyle='';document.head.append(l);
 }
-let sizes=[],packs=[],rates={};
+let sizes=[],packs=[],rates={},originalRates={};
 const ui=document.createElement('section');
 ui.className='kgn-pack-editor';
-ui.innerHTML=`<h3>📏 Size और 📦 Bundle</h3><p class="kgn-help">Admin कोई भी Size और 3/4/5/6 Piece Bundle एक साथ चुन सकता है। ग्राहक पर Size-wise नियम लागू होंगे।</p><div class="kgn-option-title">📏 Available sizes (multi-select)</div><div id="kgnSizeButtons" class="kgn-chip-grid"></div><div class="kgn-option-title">📦 Available bundle types (multi-select)</div><div id="kgnPackButtons" class="kgn-chip-grid"></div><p id="kgnPackSummary" class="kgn-help" aria-live="polite"></p><div class="kgn-option-title">💰 हर Size का Wholesale Rate (₹ प्रति Piece)</div><p class="kgn-help">एक Size का प्रति Piece Rate समान है, चाहे ग्राहक 3 या 6 Piece चुने। हर Size का अलग Rate भरें।</p><div id="kgnSizeRates"></div>`;
+ui.innerHTML=`<h3>📏 Size और 📦 Bundle</h3><p class="kgn-help">Admin कोई भी Size और 3/4/5/6 Piece Bundle एक साथ चुन सकता है। ग्राहक पर Size-wise नियम लागू होंगे।</p><div class="kgn-option-title">📏 Available sizes (multi-select)</div><div id="kgnSizeButtons" class="kgn-chip-grid"></div><div class="kgn-option-title">📦 Available bundle types (multi-select)</div><div id="kgnPackButtons" class="kgn-chip-grid"></div><p id="kgnPackSummary" class="kgn-help" aria-live="polite"></p><div class="kgn-option-title">💰 हर Size का Actual और Selling Price (₹ प्रति Piece)</div><p class="kgn-help">Actual/original price वैकल्पिक है। Selling price ग्राहक देगा। Actual price Selling price से कम नहीं हो सकती; अंतर से discount अपने आप निकलेगा।</p><div id="kgnSizeRates"></div>`;
 function draw(){
   if(!$('kgnSizeButtons'))return;
   $('kgnSizeButtons').innerHTML=SIZES.map(s=>`<button type="button" data-size="${s}" class="kgn-chip ${sizes.includes(s)?'selected':''}" aria-pressed="${sizes.includes(s)}">${s}</button>`).join('');
   $('kgnPackButtons').innerHTML=PACKS.map(n=>`<button type="button" data-pack="${n}" class="kgn-chip ${packs.includes(n)?'selected':''}" aria-pressed="${packs.includes(n)}">📦 ${n} Piece</button>`).join('');
   $('kgnPackSummary').textContent='Sizes: '+(sizes.join(', ')||'None')+' · Bundles: '+(packs.join(', ')||'None');
-  $('kgnSizeRates').innerHTML=sizes.map(v=>`<label class="kgn-rate-row"><strong>📏 ${v}</strong><span>₹ <input type="number" inputmode="decimal" min="0" max="99999999" step="0.01" required data-rate-size="${v}" value="${rates[v]??''}" placeholder="₹ प्रति Piece"></span></label>`).join('')||'<p class="kgn-help">Rate भरने के लिए पहले Size चुनें।</p>';
+  $('kgnSizeRates').innerHTML=sizes.map(v=>`<div class="kgn-price-edit"><strong>📏 ${v}</strong><label>Actual / Original ₹<input type="number" inputmode="decimal" min="0.01" max="99999999" step="0.01" data-original-size="${v}" value="${originalRates[v]??''}" placeholder="Optional" ${gallerySupported?'':'disabled'}></label><label>Selling / Discount ₹<input type="number" inputmode="decimal" min="0.01" max="99999999" step="0.01" required data-rate-size="${v}" value="${rates[v]??''}" placeholder="₹ प्रति Piece"></label></div>`).join('')||'<p class="kgn-help">पहले Size चुनें।</p>';
+  if(!gallerySupported)$('kgnSizeRates').insertAdjacentHTML('beforeend','<p class="hint">Original price और 4 photos के लिए database upgrade आवश्यक है। पुराने selling rates सुरक्षित हैं।</p>');
 }
 function mount(){
   const form=$('productForm');if(!form||$('kgnSizeButtons'))return;
@@ -25,7 +26,7 @@ function mount(){
   if(moq){moq.readOnly=true;moq.title='Bundle buttons से अपने आप सेट होता है';}
   const anchor=$('unit')?.closest('.grid2')||form.querySelector('.toggles');
   if(anchor)anchor.before(ui);else form.append(ui);
-  ui.addEventListener('input',e=>{const r=e.target.closest('[data-rate-size]');if(r)rates[r.dataset.rateSize]=r.value;});
+  ui.addEventListener('input',e=>{const r=e.target.closest('[data-rate-size]');if(r)rates[r.dataset.rateSize]=r.value;const o=e.target.closest('[data-original-size]');if(o)originalRates[o.dataset.originalSize]=o.value;});
   ui.addEventListener('click',e=>{
     const s=e.target.closest('[data-size]'),b=e.target.closest('[data-pack]');
     if(!s&&!b)return;
@@ -46,17 +47,19 @@ function install(){
     packs.sort((a,b)=>a-b);
     const moq=$('moq');if(moq)moq.value=packs[0]||p?.moq||'';
     rates=p?.size_rates&&typeof p.size_rates==='object'&&!Array.isArray(p.size_rates)?{...p.size_rates}:{};
+    originalRates=p?.size_original_rates&&typeof p.size_original_rates==='object'?{...p.size_original_rates}:{};
     draw();
   };
   const originalPayload=window.formPayload;
   window.formPayload=function(){
     if(!sizes.length)throw Error('कम से कम एक Size चुनें।');
     if(!packs.length)throw Error('कम से कम एक Bundle चुनें।');
-    const priceMap={};
+    const priceMap={},originalMap={};
     for(const size of sizes){
       const raw=String(rates[size]??'').trim(),value=Number(raw);
-      if(!/^\d+(?:\.\d{1,2})?$/.test(raw)||!Number.isFinite(value)||value<0||value>99999999)throw Error(size+' का सही ₹/Piece Rate भरें (अधिकतम 2 दशमलव)।');
+      if(!/^\d+(?:\.\d{1,2})?$/.test(raw)||!Number.isFinite(value)||value<=0||value>99999999)throw Error(size+' का सही ₹/Piece Rate भरें (अधिकतम 2 दशमलव)।');
       priceMap[size]=value;
+      const original=String(originalRates[size]??'').trim();if(original){const n=Number(original);if(!/^\d+(?:\.\d{1,2})?$/.test(original)||!Number.isFinite(n)||n<value||n>99999999)throw Error(size+': Actual price Selling price से कम नहीं हो सकती।');originalMap[size]=n;}
     }
     const moq=$('moq');if(moq)moq.value=Math.min(...packs);
     const rate=$('rate'),sale=$('sale_rate');
@@ -64,6 +67,7 @@ function install(){
     if(sale)sale.value='';
     const row=originalPayload();
     row.size_options=[...sizes];row.pack_options=[...packs];row.size_rates=priceMap;
+    if(gallerySupported)row.size_original_rates=originalMap;
     row.moq=Math.min(...packs);row.rate=Math.min(...Object.values(priceMap));row.sale_rate=null;
     return row;
   };
