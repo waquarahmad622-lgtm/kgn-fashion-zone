@@ -4,10 +4,15 @@
 <head>
 <meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#c91c27" name="theme-color"/><meta content="K.G.N. Fashion Zone — wholesale garments collection and enquiries." name="description"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="KGN Fashion"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <title>K.G.N. Fashion Zone | Wholesale</title>
 <link href="./manifest.webmanifest" rel="manifest"/><link href="./icon-192.png" rel="icon" type="image/png"/><link href="./icon-192.png" rel="apple-touch-icon"/>
-<link href="./app.css?v=31" rel="stylesheet"/>
+<link href="./app.css?v=32" rel="stylesheet"/>
 <link href="./share-app.css?v=1" rel="stylesheet"/>
+<script src="./mobile-compat.js?v=32" defer></script>
 <style>.cloud-state{margin:8px 13px 0;border-radius:10px;padding:9px 11px;background:#fef4d7;color:#704b05;font-weight:800;font-size:11px}.cloud-state.ok{background:#e7f8ed;color:#14683e}.cloud-state.error{background:#ffedea;color:#8a1420}.admin-launch a{margin-top:10px}</style></head>
 <body>
 <div aria-label="Loading" id="splash" role="status"><div class="splash-brand"><img alt="K.G.N. Fashion Zone logo" src="./logo.png"/></div><strong>K.G.N. Fashion Zone</strong><small>WHOLESALE GARMENTS</small><div class="splash-progress"><i></i></div></div>
@@ -23,8 +28,8 @@
 <div class="pad">
 <div aria-label="Promotional banners" class="carousel" id="heroCarousel">
 <div class="slides" id="heroSlides">
-<article class="hero-slide hero-first"><div class="hero-content"><span class="eyebrow" data-i="bannerKicker">K.G.N. WHOLESALE</span><h1 data-i="bannerTitle">फैशन की नई पहचान</h1><p data-i="bannerSub">लेडीज़, जेंट्स और किड्स कलेक्शन एक ही जगह।</p><button class="cta-white" data-i="explore" data-page="catalog">कलेक्शन देखें →</button></div><div class="hero-mosaic"><img alt="Illustrative lehenga" src="./home-sample-lehenga-v31.webp" width="640" height="640"/><img alt="Illustrative coat set" src="./home-sample-coat-v31.webp" width="640" height="640"/></div></article>
-<article class="hero-slide hero-second"><div class="hero-content"><span class="eyebrow" data-i="seasonKicker">FESTIVE EDIT</span><h2 data-i="seasonTitle">त्योहारी कलेक्शन</h2><p data-i="seasonSub">अपनी दुकान के लिए उपलब्ध डिज़ाइन की जानकारी लें।</p><button class="cta-white" data-i="browse" data-page="catalog">अभी देखें →</button></div><div class="hero-mosaic"><img alt="Illustrative frock" src="./home-sample-frock-v31.webp" width="640" height="640"/><img alt="Illustrative kurti pant" src="./home-sample-kurti-v31.webp" width="640" height="640"/></div></article>
+<article class="hero-slide hero-first"><div class="hero-content"><span class="eyebrow" data-i="bannerKicker">K.G.N. WHOLESALE</span><h1 data-i="bannerTitle">फैशन की नई पहचान</h1><p data-i="bannerSub">लेडीज़, जेंट्स और किड्स कलेक्शन एक ही जगह।</p><button class="cta-white" data-i="explore" data-page="catalog">कलेक्शन देखें →</button></div><div class="hero-mosaic"><img alt="Illustrative lehenga" src="./home-sample-lehenga-v31.webp" width="640" height="640" decoding="async"/><img alt="Illustrative coat set" src="./home-sample-coat-v31.webp" width="640" height="640" decoding="async"/></div></article>
+<article class="hero-slide hero-second"><div class="hero-content"><span class="eyebrow" data-i="seasonKicker">FESTIVE EDIT</span><h2 data-i="seasonTitle">त्योहारी कलेक्शन</h2><p data-i="seasonSub">अपनी दुकान के लिए उपलब्ध डिज़ाइन की जानकारी लें।</p><button class="cta-white" data-i="browse" data-page="catalog">अभी देखें →</button></div><div class="hero-mosaic"><img alt="Illustrative frock" src="./home-sample-frock-v31.webp" width="640" height="640" decoding="async"/><img alt="Illustrative kurti pant" src="./home-sample-kurti-v31.webp" width="640" height="640" decoding="async"/></div></article>
 <article class="hero-slide hero-third"><div class="hero-content"><span class="eyebrow">K.G.N. FASHION ZONE</span><h2 data-i="trustedTitle">सीधी थोक इन्क्वायरी</h2><p data-i="trustedSub">पसंद के आइटम चुनें और WhatsApp पर अपनी ज़रूरत भेजें।</p><button class="cta-white" data-i="contact" data-page="contact">संपर्क करें →</button></div><div class="hero-stamp"><img alt="K.G.N. Fashion Zone logo" src="./logo.png"/></div></article>
 </div>
 <div aria-label="Banner controls" class="dots" id="heroDots"><button aria-label="Banner 1" class="active" data-slide="0"></button><button aria-label="Banner 2" data-slide="1"></button><button aria-label="Banner 3" data-slide="2"></button></div>
@@ -151,15 +156,15 @@ html[lang="ur"] #home .kgn-wa-float .kgn-wa-ur { display:inline; }
     pointer-events: none; box-shadow: 0 2px 9px #0002;
   }
   #kgnPhotoViewer {
-    width: min(94vw, 850px); max-width: 94vw; max-height: 94dvh;
+    width: min(94vw, 850px); max-width: 94vw; max-height: 94vh; max-height: 94dvh;
     margin: auto; padding: 0; border: 0; border-radius: 19px;
     overflow: hidden; background: #13161d; color: #fff;
     box-shadow: 0 20px 65px #0008;
   }
   #kgnPhotoViewer::backdrop { background: rgba(6, 10, 18, .88); }
-  #kgnPhotoViewer .kgn-photo-content { position: relative; display: flex; flex-direction: column; max-height: 94dvh; }
+  #kgnPhotoViewer .kgn-photo-content { position: relative; display: flex; flex-direction: column; max-height: 94vh; max-height: 94dvh; }
   #kgnPhotoViewer .kgn-photo-image {
-    display: block; width: 100%; max-height: calc(94dvh - 82px);
+    display: block; width: 100%; max-height: calc(94vh - 82px); max-height: calc(94dvh - 82px);
     min-height: 90px; object-fit: contain; background: #13161d;
   }
   #kgnPhotoViewer .kgn-photo-caption {
@@ -324,7 +329,7 @@ html[lang="ur"] #home .kgn-wa-float .kgn-wa-ur { display:inline; }
 .product-card .product-body h3 {display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;cursor:pointer}
 .product-card .product-body p {display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
 .product-card .product-body h3:focus-visible {outline:3px solid #c91c27;outline-offset:3px;border-radius:4px}
-#kgnTextDetail {box-sizing:border-box;width:min(92vw,540px);max-height:85dvh;border:0;border-radius:18px;padding:0;background:#fff;color:#202630;box-shadow:0 16px 60px #0006;overflow:auto}
+#kgnTextDetail {box-sizing:border-box;width:min(92vw,540px);max-height:85vh;max-height:85dvh;border:0;border-radius:18px;padding:0;background:#fff;color:#202630;box-shadow:0 16px 60px #0006;overflow:auto}
 #kgnTextDetail::backdrop {background:#111827b8}
 #kgnTextDetail .detail-head {position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;background:#fff;border-bottom:1px solid #e5e7eb}
 #kgnTextDetail .detail-head strong {color:#a90f1a;font-size:14px}
@@ -352,7 +357,7 @@ close.addEventListener('click',()=>modal.close());modal.addEventListener('click'
 
 <nav aria-label="Main navigation" class="bottomnav"><button class="navbtn active" data-page="home"><span class="navicon">⌂</span><span data-i="home">होम</span></button><button class="navbtn" data-page="catalog"><span class="navicon">▦</span><span data-i="collection">कलेक्शन</span></button><button class="navbtn" data-page="new"><span class="navicon">✦</span><span data-i="newShort">नया</span></button><button class="navbtn" data-page="enquiry"><span class="navicon">🛒</span><span data-i="enquiry">इन्क्वायरी</span><b hidden="" id="cartCount">0</b></button><button class="navbtn" data-page="more"><span class="navicon">☰</span><span data-i="more">और</span></button></nav>
 <div aria-live="polite" class="toast" id="toast" role="status"></div>
-</div><script defer="defer" src="./cloud-config.js"></script><script defer="defer" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script defer="defer" src="./catalog-data.js"></script><script defer="defer" src="./customer.js?v=31"></script>
+</div><script defer="defer" src="./cloud-config.js"></script><script defer="defer" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script defer="defer" src="./catalog-data.js"></script><script defer="defer" src="./customer.js?v=32"></script>
 <script src="./customer-bundles.js?v=23" defer></script>
 <script src="./customer-language-v24.js?v=24" defer></script><script src="./cityreach-brand-v26.js?v=28" defer></script>
 

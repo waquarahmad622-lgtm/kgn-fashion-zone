@@ -77,3 +77,47 @@
   #heroSlides .hero-slide { gap: 10px; padding-inline: 14px; }
   #heroSlides h1, #heroSlides h2 { font-size: 22px; }
 }
+
+/* V32: safe areas, older Safari dialogs and reduced-motion support. */
+.shell { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+.masthead {
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  padding-left: calc(16px + env(safe-area-inset-left, 0px));
+  padding-right: calc(16px + env(safe-area-inset-right, 0px));
+}
+.bottomnav {
+  padding: 6px 3px 8px;
+  padding: 6px calc(3px + env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) calc(3px + env(safe-area-inset-left, 0px));
+}
+.toast { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+@media (pointer: coarse) {
+  .search input, .form-card input:not([type=checkbox]):not([type=file]), .form-card select, textarea { font-size: 16px; }
+}
+dialog:not([open]) { display: none; }
+#kgnPhotoViewer.kgn-dialog-fallback,
+#kgnTextDetail.kgn-dialog-fallback,
+#kgnShareDialog.kgn-dialog-fallback {
+  display: block;
+  position: fixed;
+  top: 50%;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  transform: translateY(-50%);
+}
+#kgnPhotoViewer.kgn-dialog-fallback:not([open]),
+#kgnTextDetail.kgn-dialog-fallback:not([open]),
+#kgnShareDialog.kgn-dialog-fallback:not([open]) { display: none; }
+.kgn-dialog-fallback + .backdrop, ._dialog_overlay {
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+}
+.kgn-dialog-fallback + .backdrop { background: rgba(6, 10, 18, .78); }
+@supports not (aspect-ratio: 1 / 1) {
+  .product-card .photo-wrap { height: 0; padding-top: 133.3333%; }
+  .product-card .photo-wrap > img { position: absolute; top: 0; left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
