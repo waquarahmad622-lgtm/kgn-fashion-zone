@@ -8,4 +8,27 @@ const noAuth=make('kgn-payment',{auth:{getUser:async()=>({data:{user:null},error
 let charged;const adminDB={auth:{getUser:async()=>({data:{user:{id:'admin'}},error:null})},from:table=>table==='admin_users'?{select:()=>({eq:()=>({maybeSingle:async()=>({data:{user_id:'admin'}})})})}:{update:()=>({eq:()=>({eq:async()=>({error:null})})})},rpc:async()=>({data:{amount:50000,reference:'11111111-1111-4111-8111-111111111111'},error:null})};
 const admin=make('kgn-payment',adminDB,{RAZORPAY_KEY_ID:'test-key',RAZORPAY_KEY_SECRET:'test-secret',SUPABASE_URL:'https://example.test',SUPABASE_ANON_KEY:'test-anon',SUPABASE_SERVICE_ROLE_KEY:'test-service'},{fetch:async(url,opts)=>{charged=JSON.parse(opts.body);return new Response(JSON.stringify({id:'plink_test',short_url:'https://rzp.io/test',amount:50000,currency:'INR',reference_id:charged.reference_id}),{status:200})}});
 const response=await admin(new Request('https://example.test/pay',{method:'POST',headers:{authorization:'Bearer valid'},body:JSON.stringify({id:'11111111-1111-4111-8111-111111111111',amount:1})}));assert.equal(response.status,200);assert.equal(charged.amount,50000);assert.equal(charged.notify.sms,false);assert.equal(charged.accept_partial,false);console.log('PASS webhook HMAC, amount mismatch, authorized-only payment creation, server totals and no automatic messages');
+// Setup checks require an admin and cannot create payment links or expose secrets.
+const setupEnv={RAZORPAY_KEY_ID:'rzp_test_fixture',RAZORPAY_KEY_SECRET:'private-api-secret',RAZORPAY_WEBHOOK_SECRET:'private-hook-secret',SUPABASE_URL:'https://example.test',SUPABASE_ANON_KEY:'test-anon',SUPABASE_SERVICE_ROLE_KEY:'test-service'};
+const setupRequest=(token='valid')=>new Request('https://example.test/pay',{method:'POST',headers:token?{authorization:'Bearer '+token}:{},body:JSON.stringify({action:'check_setup'})});
+const setupDB={...adminDB,rpc:()=>{throw Error('Setup must not mutate orders')}};
+let probes=0;const setup=make('kgn-payment',setupDB,setupEnv,{fetch:async(url,opts)=>{probes++;assert.equal(opts.method,'GET');assert.equal(url,'https://api.razorpay.com/v1/payment_links/?count=1');assert.equal(opts.redirect,'error');return new Response('{"items":[{"customer":"private-customer"}]}',{status:200})}});
+assert.equal((await setup(setupRequest(''))).status,401);assert.equal(probes,0);
+const setupResponse=await setup(setupRequest());assert.equal(setupResponse.status,200);assert.deepEqual(await setupResponse.json(),{mode:'test',keys_present:true,webhook_secret_configured:true,payment_verified:false,api_access:'ok'});assert.equal(probes,1);
+const denied=make('kgn-payment',{...setupDB,from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:null})})})})},setupEnv,{fetch:()=>{throw Error('Non-admin must not reach gateway')}});assert.equal((await denied(setupRequest())).status,403);
+const rejected=make('kgn-payment',setupDB,{...setupEnv,RAZORPAY_KEY_ID:'rzp_live_fixture'},{fetch:async()=>new Response('private provider error',{status:401})});const rejectedData=await (await rejected(setupRequest())).json();assert.equal(rejectedData.mode,'live');assert.equal(rejectedData.api_access,'rejected');assert.equal(JSON.stringify(rejectedData).includes('private'),false);
+const missing=make('kgn-payment',setupDB,{...setupEnv,RAZORPAY_KEY_SECRET:''});assert.equal((await (await missing(setupRequest())).json()).api_access,'missing_keys');
+const noHook=make('kgn-payment',setupDB,{...setupEnv,RAZORPAY_WEBHOOK_SECRET:''},{fetch:async()=>new Response('{}')});assert.equal((await (await noHook(setupRequest())).json()).webhook_secret_configured,false);
+const offline=make('kgn-payment',setupDB,setupEnv,{fetch:async()=>{throw Error('private diagnostic')}});assert.equal((await (await offline(setupRequest())).json()).api_access,'unavailable');
+console.log('PASS admin-only read-only setup checks, Test/Live mode, failure handling and secret/data redaction');
+const {JSDOM}=require('jsdom');const dom=new JSDOM('<section id="inventoryPanel"></section>',{runScripts:'outside-only'});const w=dom.window;
+if(w.document.readyState==='loading')await new Promise(resolve=>w.document.addEventListener('DOMContentLoaded',resolve,{once:true}));
+let result={data:{mode:'test',api_access:'ok',webhook_secret_configured:true}},invocations=0;
+w.sessionUser={id:'admin'};w.db={functions:{invoke:async(name,args)=>{invocations++;assert.equal(name,'kgn-payment');assert.equal(args.body.action,'check_setup');return result}}};w.loadAdmin=async()=>{};
+w.eval(fs.readFileSync(path.join(__dirname,'../admin-orders.js'),'utf8'));
+const setupButton=w.document.getElementById('kgnCheckPaymentSetup'),setupMessage=w.document.getElementById('kgnPaymentSetupMessage');
+assert.ok(setupButton);await setupButton.onclick();assert.match(setupMessage.textContent,/Test Mode/);assert.match(setupMessage.textContent,/पूरा test अभी बाकी/);assert.equal(setupButton.disabled,false);
+result={data:{mode:'live',api_access:'rejected'}};await setupButton.onclick();assert.match(setupMessage.textContent,/स्वीकार नहीं/);assert.equal(setupMessage.className,'status error');
+w.sessionUser=null;await setupButton.onclick();assert.equal(invocations,2);assert.match(setupMessage.textContent,/Admin Login/);dom.window.close();
+console.log('PASS admin setup button, actual click handling, honest pending-test message and logged-out guard');
 })().catch(e=>{console.error(e);process.exitCode=1});
