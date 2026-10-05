@@ -14,6 +14,7 @@ Implemented: up to four product images with cover selection/removal and customer
 
 ## Operations
 
+- Admin → Orders → `Razorpay setup जाँचें` runs an authenticated, read-only API connection check. It reports Test/Live mode and whether the webhook secret is present; it does not verify webhook delivery or complete a payment. The check returns no keys or payment/customer records and does not create orders, change settings, or charge money. Run a full merchant test before enabling customer payments.
 - A request is not a confirmed sale. Server prices are captured from current size rates. The store confirms stock and the final shipping charge; final shipping is locked afterwards.
 - Confirmation reserves quantities against other confirmed/packed app orders. Stock must have an opening count. These requests accept products priced per piece; set/dozen products continue using WhatsApp until explicitly supported.
 - Shipped requires courier and AWB, verified online payment (or COD), and calls the existing inventory Sale/Dispatch RPC in the same transaction. **Do not also record a manual Sale for the same app order.** Other manual inventory edits can reduce available stock; dispatch will fail if stock is insufficient.
