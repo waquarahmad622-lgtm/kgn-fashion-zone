@@ -4,11 +4,11 @@ const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8'),tick=()=>new P
  const dom=new JSDOM('<html lang="en"><input id="kgnPhone"><input id="kgnBuyer"><textarea id="kgnAddress"></textarea><input id="kgnCity"><input id="kgnPin"><div id="kgnPhoneVerification"></div><div id="kgnDeliveryPreview"></div>',{url:'https://example.test',runScripts:'outside-only'}),w=dom.window,$=id=>w.document.getElementById(id);
  let now=Date.now(),sent=[],verified=[],result,resolveOTP,signal,changes=0,verifyDeferred;
  w.Date.now=()=>now;w.KGN_CLOUD_CONFIG={url:'https://example.test',publishableKey:'public-only'};
- w.localStorage.setItem('existing_admin_session','untouched');
+ w.localStorage.setItem('existing_admin_session','untouched');let settingsReads=0;w.fetch=async(url,options)=>{settingsReads++;assert.equal(url,'https://example.test/auth/v1/settings');assert.equal(options.headers.apikey,'public-only');return {ok:true,json:async()=>({external:{phone:true}})}};
  w.OTPCredential=function(){};Object.defineProperty(w.navigator,'credentials',{value:{get:opts=>{signal=opts.signal;return new Promise(r=>resolveOTP=r)}}});
  w.supabase={createClient:(url,key,opts)=>{assert.equal(opts.auth.persistSession,false);assert.equal(opts.auth.autoRefreshToken,false);assert.equal(opts.auth.detectSessionInUrl,false);assert.equal(opts.auth.storageKey,'kgn_checkout_phone_v37');return {auth:{signInWithOtp:async args=>{sent.push(args);return {error:null}},verifyOtp:async args=>{verified.push(args);if(verifyDeferred)return verifyDeferred;return result}},rpc:async(name,args)=>({data:{name,phone:args.p_buyer.phone}})}}};
- w.eval(read('checkout-phone.js'));w.KGNPhone.attach({required:false});assert.equal($('kgnPhoneVerification').hidden,true);
- w.KGNPhone.attach({required:true,onChange:()=>changes++});assert.equal($('kgnPhoneVerification').hidden,false);assert.equal($('kgnOTP').autocomplete,'one-time-code');assert.equal($('kgnOTP').inputMode,'numeric');
+ w.eval(read('checkout-phone.js'));w.KGNPhone.attach({required:false});await tick();assert.equal($('kgnPhoneVerification').hidden,false);assert.match($('kgnPhoneOptional').textContent,/optional/);assert.equal($('kgnOTPFields').hidden,true,'Hide code entry until an OTP was sent');
+ w.KGNPhone.attach({required:false,onChange:()=>changes++});assert.equal(settingsReads,1);assert.equal(sent.length,0,'Optional verification never sends SMS automatically');assert.equal($('kgnPhoneVerification').hidden,false);assert.equal($('kgnOTP').autocomplete,'one-time-code');assert.equal($('kgnOTP').inputMode,'numeric');
  $('kgnPhone').value='123';await $('kgnSendOTP').onclick();assert.equal(sent.length,0);
  $('kgnPhone').value='9000000000';$('kgnBuyer').value='<script>alert(1)</script>';$('kgnAddress').value='10 Test Road';$('kgnCity').value='Test City';$('kgnPin').value='272175';
  await $('kgnSendOTP').onclick();assert.equal(sent.length,1);assert.equal(sent[0].phone,'+919000000000');assert.equal(sent[0].options.channel,'sms');assert.equal($('kgnSendOTP').disabled,true);
@@ -18,7 +18,7 @@ const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8'),tick=()=>new P
  const session={access_token:'test-phone-jwt',expires_at:Math.floor(now/1000)+3600};result={data:{session,user:{phone:'919000000000',phone_confirmed_at:new Date().toISOString()}}};
  await $('kgnVerifyOTP').onclick();assert.equal(w.KGNPhone.getToken(),'test-phone-jwt');assert.equal($('kgnOTP').value,'');assert.ok($('kgnDeliveryPreview').textContent.includes('Mobile verified'));assert.equal(w.KGNPhone.getToken('9111111111'),'');
  assert.equal(w.localStorage.length,1);assert.equal(w.localStorage.getItem('existing_admin_session'),'untouched');assert.equal(w.sessionStorage.length,0);
- assert.equal((await w.KGNPhone.placeOrder({p_buyer:{phone:'9000000000'}})).data.phone,'9000000000');
+ assert.equal((await w.KGNPhone.placeOrder({p_buyer:{phone:'9000000000'}})).data.phone,'9000000000');assert.equal($('kgnSkipOTP').hidden,false);$('kgnSkipOTP').onclick();assert.equal(w.KGNPhone.getToken(),'');assert.ok(!$('kgnDeliveryPreview').textContent.includes('Mobile verified'));
  $('kgnPhone').value='9111111111';$('kgnPhone').dispatchEvent(new w.Event('input'));assert.equal(w.KGNPhone.getToken(),'');assert.ok(!$('kgnDeliveryPreview').textContent.includes('Mobile verified'));
  now+=61000;await $('kgnSendOTP').onclick();assert.equal(sent.length,2);$('kgnOTP').value='654321';let release;verifyDeferred=new Promise(r=>release=r);const pending=$('kgnVerifyOTP').onclick();$('kgnPhone').value='9222222222';$('kgnPhone').dispatchEvent(new w.Event('input'));release({data:{session,user:{phone:'919111111111',phone_confirmed_at:new Date().toISOString()}}});await pending;assert.equal(w.KGNPhone.getToken(),'','An old response cannot verify a changed number');assert.ok(changes>0);
  w.close();
@@ -29,4 +29,3 @@ const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8'),tick=()=>new P
  a.eval(read('admin-orders.js'));await a.loadAdmin();assert.equal(a.document.querySelector('a[href^="tel:"]').href,'tel:+919000000000');assert.ok(!a.document.querySelector('.kgn-delivery-contact').textContent.includes('✓ OTP verified'));await a.document.querySelector('[data-delivery]').onclick();for(const value of ['10 Test Road','272175','Mobile: +91 9000000000','test-order'])assert.ok(copied.includes(value));row.phone_verified_at=new Date().toISOString();await a.loadAdmin();assert.ok(a.document.querySelector('.kgn-delivery-contact').textContent.includes('✓ OTP verified'));a.close();
  console.log('PASS mobile OTP: manual/autofill, resend limits, changed-number race, memory-only session, safe address preview and admin call/copy');
 })().catch(e=>{console.error(e);process.exitCode=1});
-  
