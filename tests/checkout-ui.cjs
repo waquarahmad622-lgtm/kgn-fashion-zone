@@ -26,7 +26,7 @@ const id='11111111-1111-4111-8111-111111111111';
  if(scenario.verify){await $('kgnSendOTP').onclick();$('kgnOTP').value='123456';await $('kgnVerifyOTP').onclick();assert.equal($('kgnSubmitOrder').disabled,false)}
  else if(scenario.available){await $('kgnSendOTP').onclick();$('kgnOTP').value='12';assert.equal($('kgnOrderForm').checkValidity(),true,'Partially entered optional OTP must not block payment');await $('kgnVerifyOTP').onclick();assert.equal($('kgnSubmitOrder').disabled,false)}
  else{assert.equal($('kgnSendOTP').disabled,true);assert.match($('kgnPhoneStatus').textContent,/उपलब्ध नहीं/);assert.equal($('kgnSubmitOrder').disabled,false)}
- await submit();assert.equal(sent.length,1);assert.equal(sent[0].phone_verification,scenario.verify);assert.equal(headers[0]?.Authorization,scenario.verify?'Bearer verified-phone-jwt':undefined);assert.equal(sent[0].expected_subtotal,33000);assert.equal(sent[0].token.length,64);assert.equal($('kgnContinuePayment').href,'https://rzp.io/direct');
+ await submit();assert.equal(sent.length,1);assert.equal(sent[0].phone_verification,scenario.verify);assert.equal(headers[0]?.['x-kgn-phone-authorization'],scenario.verify?'Bearer verified-phone-jwt':undefined);assert.equal(sent[0].expected_subtotal,33000);assert.equal(sent[0].token.length,64);assert.equal($('kgnContinuePayment').href,'https://rzp.io/direct');
  const stored=JSON.parse(w.localStorage.getItem('kgn_private_orders_v34'));assert.equal(stored[0].id,id);assert.equal(stored[0].token,sent[0].token);
  const attempt=w.localStorage.getItem('kgn_checkout_attempt_v36');assert.ok(!attempt.includes('Test buyer'));assert.ok(!attempt.includes('9000000000'));
  await submit();assert.equal(sent[1].token,sent[0].token,'Retry must reuse the same token');
