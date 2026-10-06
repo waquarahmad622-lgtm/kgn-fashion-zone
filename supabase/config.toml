@@ -5,3 +5,6 @@ verify_jwt = false # Provider HMAC verification is mandatory inside this functio
 
 [functions.kgn-checkout]
 verify_jwt = false # Guest creation is validated server-side; existing checkout access requires its 256-bit private order key.
+
+[functions.kgn-retailers]
+verify_jwt = false # Public catalogue/registration; user and admin actions validate JWT and database roles inside.
