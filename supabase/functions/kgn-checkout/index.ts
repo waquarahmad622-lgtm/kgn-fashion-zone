@@ -3,7 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 const origin = Deno.env.get('KGN_SITE_ORIGIN') || 'https://waquarahmad622-lgtm.github.io';
 const headers = {
   'Access-Control-Allow-Origin': origin,
-  'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
+  'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info, x-kgn-phone-authorization',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Cache-Control': 'no-store', 'Content-Type': 'application/json',
 };
@@ -65,13 +65,25 @@ Deno.serve(async req => {
   const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
   let id = body.id;
   try {
+    const { data: accessConfig, error: configError } = await db.from('kgn_commerce_settings').select('retailer_access_required').eq('id', 1).single();
+    if (configError || !accessConfig) return json({ error: 'Could not check retailer access' }, 503);
+    let retailerUser: string | null = null;
+    if (!id && accessConfig.retailer_access_required) {
+      const bearer = req.headers.get('authorization')?.match(/^Bearer (.+)$/i)?.[1];
+      if (!bearer) return json({ error: 'Retailer approval required' }, 401);
+      const { data: identity, error: identityError } = await db.auth.getUser(bearer);
+      if (identityError || !identity?.user) return json({ error: 'Retailer login required' }, 401);
+      const { data: retailer, error: retailerError } = await db.from('kgn_retailers').select('status').eq('user_id', identity.user.id).maybeSingle();
+      if (retailerError || retailer?.status !== 'approved') return json({ error: 'Retailer approval required' }, 403);
+      retailerUser = identity.user.id;
+    }
     await releaseExpired(db, authorization);
     if (!id) {
-      // Public guest purchase. Prices, availability, policy, phone rate limit,
+      // Retailer access, prices, availability, policy, phone rate limit,
       // idempotency and stock reservation are checked in one DB transaction.
       let verifiedUser: string | null = null;
       if (body.phone_verification === true) {
-        const bearer = req.headers.get('authorization')?.match(/^Bearer (.+)$/i)?.[1];
+        const bearer = (req.headers.get('x-kgn-phone-authorization') || req.headers.get('authorization'))?.match(/^Bearer (.+)$/i)?.[1];
         if (!bearer) return json({ error: 'Verify your mobile OTP before payment' }, 401);
         const { data: identity, error: authError } = await db.auth.getUser(bearer);
         const phone = identity?.user?.phone?.replace(/^\+/, '');
@@ -80,10 +92,10 @@ Deno.serve(async req => {
         }
         verifiedUser = identity.user.id;
       }
-      const { data, error } = await db.rpc(verifiedUser ? 'kgn_prepare_phone_checkout' : 'kgn_prepare_checkout', {
+      const { data, error } = await db.rpc(retailerUser ? 'kgn_prepare_retailer_checkout' : verifiedUser ? 'kgn_prepare_phone_checkout' : 'kgn_prepare_checkout', {
         p_buyer: body.buyer, p_lines: body.lines, p_token: body.token,
         p_policy: body.policy, p_expected_subtotal: body.expected_subtotal,
-        ...(verifiedUser ? { p_phone_user: verifiedUser } : {}),
+        ...(retailerUser ? { p_phone_user: verifiedUser, p_retailer: retailerUser } : verifiedUser ? { p_phone_user: verifiedUser } : {}),
       });
       if (error) return json({ error: error.message }, 409);
       id = data.id;
