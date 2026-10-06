@@ -48,11 +48,11 @@ The owner selected **delivery charges paid separately to the courier**. New onli
 Tests include legacy order behavior and direct-checkout authorization, price mismatch rollback, reservations, retries, expiry reconciliation, translated freight disclosure, return/tracking behavior and malicious payment URL rejection.
 
 
-## Mobile verification and delivery contact (v37)
+## Optional mobile verification and delivery contact (v38)
 
 Implementation is in `checkout-phone.js` and migration `20261006093600_checkout_phone_verification.sql`. The additive migration leaves `phone_verification_required=false`. No historical order is marked phone-verified. Checkout and order settings continue working while the SMS provider is unavailable.
 
-1. Apply the migration, deploy the updated `kgn-checkout` (custom authentication, existing `verify_jwt=false`), and publish all v37 frontend assets together. Keep the verification switch off until the following setup is complete.
+1. Apply the migration, deploy the updated `kgn-checkout` (custom authentication, existing `verify_jwt=false`), and publish the v38 checkout assets together. Keep `phone_verification_required=false`, as requested by the owner on 2026-10-06. Configuring the SMS provider does not make verification mandatory.
 2. In Supabase Authentication → Sign In / Providers → Phone, configure an owner-approved SMS provider and enable Phone. Enter credentials only in its private dashboard. Check the provider's sending permissions, SMS budget, sender/template requirements and delivery to Indian numbers. Keep phone autoconfirm disabled and remove fixed test OTPs for production. Set six-digit codes and review Auth SMS send/verify limits; the UI also has a 60-second resend delay. CAPTCHA requires a matching frontend integration before enabling that Auth setting.
 3. For domain-bound SMS autofill, use a custom SMS template whose final line is the actual checkout hostname and code. With a provider that supports this template, the example is:
 
@@ -65,12 +65,11 @@ Implementation is in `checkout-phone.js` and migration `20261006093600_checkout_
 
    Confirm the delivered message preserves this exact final-line structure. A provider-managed OTP template may require provider-side customization. WebOTP is progressive enhancement: Android browser support and consent are required; iOS may offer a keyboard code suggestion via `autocomplete="one-time-code"`. Manual entry always remains available. Autofill never clicks Verify or Pay.
 4. Use a staging project for an actual send/verify test before production activation. Verify correct, incorrect, expired and resent codes, changing the number, denied autofill consent, and returning from the payment app. A real SMS/provider test has not been run by the automated test suite.
-5. After publishing and validating the SMS service, enable `phone_verification_required` on the singleton commerce settings. Only the authorized owner/service can update settings. When rolling back, disable that flag first to avoid blocking older clients. Do not bypass it with autoconfirm, a universal OTP or a fake verified timestamp.
+5. After publishing and validating the SMS service, keep `phone_verification_required=false`. The checkout checks the public Auth settings and offers SMS verification when Phone is enabled. Until then, it explains that OTP is unavailable and customers can continue. Requests are only sent when a customer chooses Send OTP. Failed, partially entered, skipped or expired optional OTPs do not prevent unverified checkout. Only a successfully verified phone carries proof into direct checkout. Required mode is retained for compatibility and must not be enabled without a new owner instruction. Do not bypass it with autoconfirm, a universal OTP or a fake verified timestamp.
 
-The OTP Supabase client uses separate, in-memory Auth storage and never overwrites the admin login. A valid phone session is required before new checkout. The Edge Function fetches the current user with `getUser` and checks the exact phone and its confirmation. Its service-only database helper rechecks the Auth identity and stores proof with the order. The old direct signature fails closed when verification is required; legacy/COD RPCs require a signed matching phone identity too. Caller-provided `phone_verified` fields are ignored. Existing orders resume with their original private tracking keys. Payment is still marked paid only by the signed Razorpay webhook.
+The OTP Supabase client uses separate, in-memory Auth storage and never overwrites the admin login. For optional verification, direct checkout accepts either an unverified mobile or a verified phone session. Verification is never claimed without proof. The Edge Function fetches the current user with `getUser` and checks the exact phone and its confirmation. Its service-only database helper rechecks the Auth identity and stores proof with the order. The old direct signature fails closed when verification is required; legacy/COD RPCs require a signed matching phone identity too. Caller-provided `phone_verified` fields are ignored. Existing orders resume with their original private tracking keys. Payment is still marked paid only by the signed Razorpay webhook.
 
 Customers review their address with the mobile number before payment. Authorized staff see a `tel:` link and a copy-delivery-details button. Only genuinely verified orders carry the OTP badge. Contact details and Auth identifiers remain absent from public tracking responses. Copying a delivery label does not send it to anyone automatically.
 
 Provider reference: https://supabase.com/docs/guides/auth/phone-login
 Autofill reference: https://developer.chrome.com/docs/identity/web-apis/web-otp
-  
