@@ -6,6 +6,7 @@ create table public.products(id uuid primary key,sku text,name_en text,name_hi t
 insert into public.products values('${pid}','TEST','Test dress','टेस्ट','ٹیسٹ','products/33333333-3333-4333-8333-333333333333.jpg','ladies','piece',100,null,ARRAY['S','M'],ARRAY[3,6],'{"S":100,"M":150}',true,60);
 alter table public.products enable row level security;create policy published on public.products for select using(published);create policy owner_edit on public.products for all to authenticated using(auth.uid()='${owner}') with check(auth.uid()='${owner}');grant select on public.products to anon,authenticated;grant update,insert on public.products to authenticated;
 create table public.stock_audit(product_id uuid,quantity int,note text);create function public.kgn_stock_action(p_product_id uuid,p_action text,p_quantity int,p_note text) returns integer language plpgsql security definer as $$declare n int;begin if auth.uid()<>'${owner}' then raise exception 'Admin only';end if;update public.products set stock_qty=stock_qty-p_quantity where id=p_product_id and stock_qty>=p_quantity returning stock_qty into n;if n is null then raise exception 'Insufficient stock';end if;insert into public.stock_audit values(p_product_id,p_quantity,p_note);return n;end$$;`);
+await db.exec(`create schema private;grant usage on schema private to anon,authenticated;create function private.is_kgn_admin() returns boolean language sql security definer set search_path='' as $$select exists(select 1 from public.admin_users where user_id=auth.uid())$$;create schema storage;create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);create table storage.objects(id uuid,bucket_id text,name text);alter table storage.objects enable row level security;`);
 for(const f of readdirSync(new URL('../supabase/migrations/',import.meta.url)).sort())await db.exec(readFileSync(new URL('../supabase/migrations/'+f,import.meta.url),'utf8'));
 const check=async(name,fn)=>{await fn();passed++;console.log('PASS',name)};
 const rejected=async(sql,args,pattern)=>assert.rejects(()=>db.query(sql,args),pattern);
@@ -99,5 +100,25 @@ await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='${ot
 await check('a different signed phone cannot place a legacy order',()=>assert.rejects(()=>place('2'.repeat(64)),/Verify your mobile OTP/));
 await db.exec('reset role;set role anon');
 await check('verified customer tracking still omits mobile, address and Auth identity',async()=>{const tracked=(await db.query('select kgn_track_order($1,$2) as o',[verified.id,'f'.repeat(64)])).rows[0].o;for(const key of ['phone','address','phone_user_id','phone_verified_at'])assert.ok(!(key in tracked))});
+
+await db.exec(`reset role;update kgn_commerce_settings set retailer_access_required=true,phone_verification_required=false;insert into kgn_retailers(user_id,phone,shop_name,contact_name,address,city,proof_path) values('${phoneUser}','9000000000','Test shop','Test owner','Test shop street 123','Test city','${phoneUser}/proof.jpg');`);
+await db.exec('set role anon');
+await check('price boundary hides all product columns from guests',async()=>assert.deepEqual((await db.query('select rate,size_rates,image_paths from products')).rows,[]));
+await check('legacy order RPC cannot reveal totals to guests after rollout',()=>assert.rejects(()=>place('3'.repeat(64)),/Retailer approval/));
+await check('guest cannot read retailer applications',()=>assert.rejects(()=>db.query('select * from kgn_retailers'),/permission denied/));
+await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='${phoneUser}'`);
+await check('pending retailer cannot fetch prices',async()=>assert.deepEqual((await db.query('select * from products')).rows,[]));
+await check('retailer cannot approve their own application',async()=>{await db.query("update kgn_retailers set status='approved' where user_id=$1",[phoneUser]);assert.equal((await db.query('select status from kgn_retailers')).rows[0].status,'pending')});
+await check('retailer cannot edit registered phone or replace identity',()=>assert.rejects(()=>db.query("update kgn_retailers set phone='9111111111'"),/permission denied/));
+await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='${owner}'`);
+await check('owner retains full product and inventory listing',async()=>assert.equal(Number((await db.query('select rate from products')).rows[0].rate),100));
+await check('owner can approve a retailer',async()=>{await db.query("update kgn_retailers set status='approved' where user_id=$1",[phoneUser]);});
+await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='${phoneUser}'`);
+await check('approved retailer can fetch original rates',async()=>assert.equal((await db.query('select size_rates from products')).rows[0].size_rates.S,100));
+await check('approved retailer cannot edit inventory or prices',async()=>{await db.query('update products set rate=1 where id=$1',[pid]);assert.equal(Number((await db.query('select rate from products')).rows[0].rate),100)});
+await db.exec(`reset role;update kgn_retailers set status='blocked' where user_id='${phoneUser}';set role authenticated;set request.jwt.claim.sub='${phoneUser}'`);
+await check('blocking access takes effect on the existing identity',async()=>assert.deepEqual((await db.query('select * from products')).rows,[]));
+await db.exec('reset role');
+await check('blocked retailer cannot use service checkout wrapper',()=>assert.rejects(()=>db.query('select kgn_prepare_retailer_checkout($1,$2,$3,$4,$5,$6,$7)',[JSON.stringify(buyer),JSON.stringify(lines),'4'.repeat(64),'orders-v1-20261003',60000,null,phoneUser]),/Retailer approval/));
 console.log(`${passed} database/security scenarios passed`);
 await db.close();
