@@ -5,10 +5,10 @@ function fixture(options={}){
  const db={auth:{getUser:async jwt=>{calls.push({authJWT:jwt});return options.authError?{error:{message:'Expired'},data:{user:null}}:{data:{user:options.user||{id:'verified-user',phone:'919000000000',phone_confirmed_at:new Date().toISOString()}}}}},rpc:async(name,args)=>{calls.push({name,args});
   if(name==='kgn_checkout_expiry_candidates')return {data:options.stale||[]};
   if(name==='kgn_release_expired_checkout')return {data:true};
-  if(name==='kgn_prepare_checkout'||name==='kgn_prepare_phone_checkout')return options.stockError?{error:{message:'Not enough unreserved stock'}}:{data:{id}};
+  if(name==='kgn_prepare_checkout'||name==='kgn_prepare_phone_checkout'||name==='kgn_prepare_retailer_checkout')return options.stockError?{error:{message:'Not enough unreserved stock'}}:{data:{id}};
   if(name==='kgn_claim_checkout_payment')return options.invalidKey?{error:{message:'Order ID or secure key is incorrect'}}:{data:options.claim||{amount:33000,expire_by:expiry}};
   throw Error('Unexpected RPC '+name);
- },from:table=>({update:values=>{writes.push({table,values});const q={eq:()=>q,select:()=>q,maybeSingle:async()=>({data:{id},error:null}),then:resolve=>Promise.resolve({error:null}).then(resolve)};return q}})};
+ },from:table=>({select:()=>{const q={eq:()=>q,single:async()=>({data:{retailer_access_required:!!options.retailerGate}}),maybeSingle:async()=>({data:options.retailerStatus===null?null:{status:options.retailerStatus||'approved'}})};return q},update:values=>{writes.push({table,values});const q={eq:()=>q,select:()=>q,maybeSingle:async()=>({data:{id},error:null}),then:resolve=>Promise.resolve({error:null}).then(resolve)};return q}})};
  const env={RAZORPAY_KEY_ID:'rzp_test_fixture',RAZORPAY_KEY_SECRET:'private-secret',SUPABASE_URL:'https://test.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'service-secret',...options.env};
  const fetch=async(url,request)=>{
   if(request.method==='POST'){posts++;const body=JSON.parse(request.body);calls.push({gatewayBody:body});if(options.timeout)throw Error('Gateway timeout');return new Response(JSON.stringify({id:'plink_direct',short_url:'https://rzp.io/direct',amount:33000,currency:'INR',reference_id:id,expire_by:expiry,accept_partial:false,...options.link}),{status:200})}
@@ -40,5 +40,12 @@ const request=(body={},origin='https://waquarahmad622-lgtm.github.io')=>new Requ
  const link={id:'plink_expired',reference_id:id,currency:'INR',amount:33000,amount_paid:0,status:'expired',payments:[]};
  f=fixture({stale,expiredLink:link,claim:{paid:true}});await f.handler(request({id}));assert.ok(f.calls.some(x=>x.name==='kgn_release_expired_checkout'));
  for(const changes of [{status:'created'},{status:'paid',amount_paid:33000},{reference_id:'wrong'},{payments:[{status:'captured'}]}]){f=fixture({stale,expiredLink:{...link,...changes},claim:{paid:true}});await f.handler(request({id}));assert.ok(!f.calls.some(x=>x.name==='kgn_release_expired_checkout'))}
+
+ f=fixture({retailerGate:true});assert.equal((await f.handler(request())).status,401);assert.equal(f.posts(),0);
+ const retailerRequest=()=>{const r=request();r.headers.set('Authorization','Bearer retailer-session');return r};
+ for(const retailerStatus of ['pending','rejected','blocked',null]){f=fixture({retailerGate:true,retailerStatus});assert.equal((await f.handler(retailerRequest())).status,403);assert.equal(f.posts(),0);assert.ok(!f.calls.some(x=>x.name==='kgn_prepare_checkout'))}
+ f=fixture({retailerGate:true});assert.equal((await f.handler(retailerRequest())).status,200);assert.equal(f.calls.find(x=>x.name==='kgn_prepare_retailer_checkout').args.p_retailer,'verified-user');
+ f=fixture({retailerGate:true});const both=phoneRequest();both.headers.set('Authorization','Bearer retailer-session');both.headers.set('x-kgn-phone-authorization','Bearer sms-session');assert.equal((await f.handler(both)).status,200);assert.deepEqual(f.calls.filter(x=>x.authJWT).map(x=>x.authJWT),['retailer-session','sms-session']);
+ f=fixture({retailerGate:true,claim:{existing:true,url:'https://rzp.io/existing',amount:33000}});assert.equal((await f.handler(request({id}))).status,200,'Existing private-key checkout remains usable');
  console.log('PASS direct checkout: private-key access, trusted totals, no duplicate links, callback privacy, uncertain results and verified expiry cleanup');
 })().catch(e=>{console.error(e);process.exitCode=1});
