@@ -10,6 +10,9 @@ await db.exec(`create schema private;grant usage on schema private to anon,authe
 for(const f of readdirSync(new URL('../supabase/migrations/',import.meta.url)).sort())await db.exec(readFileSync(new URL('../supabase/migrations/'+f,import.meta.url),'utf8'));
 const check=async(name,fn)=>{await fn();passed++;console.log('PASS',name)};
 const rejected=async(sql,args,pattern)=>assert.rejects(()=>db.query(sql,args),pattern);
+await check('rollout activates retailer price boundary',async()=>assert.equal((await db.query('select retailer_access_required from kgn_commerce_settings')).rows[0].retailer_access_required,true));
+// Exercise the compatible expansion period before activating access later below.
+await db.exec('update kgn_commerce_settings set retailer_access_required=false');
 await check('legacy image preserved',async()=>assert.equal((await db.query('select cardinality(image_paths) as n from products')).rows[0].n,1));
 await check('fifth image rejected by database',()=>rejected("update products set image_paths=array_fill('products/33333333-3333-4333-8333-333333333333.jpg'::text,ARRAY[5])",[],/Maximum 4/));
 await check('selling price cannot exceed original',()=>rejected(`update products set size_original_rates='{"S":50}'`,[],/Original price/));
