@@ -69,9 +69,21 @@ Deno.serve(async req => {
     if (!id) {
       // Public guest purchase. Prices, availability, policy, phone rate limit,
       // idempotency and stock reservation are checked in one DB transaction.
-      const { data, error } = await db.rpc('kgn_prepare_checkout', {
+      let verifiedUser: string | null = null;
+      if (body.phone_verification === true) {
+        const bearer = req.headers.get('authorization')?.match(/^Bearer (.+)$/i)?.[1];
+        if (!bearer) return json({ error: 'Verify your mobile OTP before payment' }, 401);
+        const { data: identity, error: authError } = await db.auth.getUser(bearer);
+        const phone = identity?.user?.phone?.replace(/^\+/, '');
+        if (authError || !identity?.user?.phone_confirmed_at || phone !== '91' + String(body.buyer?.phone || '').trim()) {
+          return json({ error: 'Mobile verification expired or number changed. Verify your mobile again' }, 401);
+        }
+        verifiedUser = identity.user.id;
+      }
+      const { data, error } = await db.rpc(verifiedUser ? 'kgn_prepare_phone_checkout' : 'kgn_prepare_checkout', {
         p_buyer: body.buyer, p_lines: body.lines, p_token: body.token,
         p_policy: body.policy, p_expected_subtotal: body.expected_subtotal,
+        ...(verifiedUser ? { p_phone_user: verifiedUser } : {}),
       });
       if (error) return json({ error: error.message }, 409);
       id = data.id;
