@@ -2,10 +2,10 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const id='11111111-1111-4111-8111-111111111111',token='a'.repeat(64),expiry=Math.floor(Date.now()/1000)+1800;
 function fixture(options={}){
  const calls=[],writes=[];let handler,posts=0;
- const db={rpc:async(name,args)=>{calls.push({name,args});
+ const db={auth:{getUser:async jwt=>{calls.push({authJWT:jwt});return options.authError?{error:{message:'Expired'},data:{user:null}}:{data:{user:options.user||{id:'verified-user',phone:'919000000000',phone_confirmed_at:new Date().toISOString()}}}}},rpc:async(name,args)=>{calls.push({name,args});
   if(name==='kgn_checkout_expiry_candidates')return {data:options.stale||[]};
   if(name==='kgn_release_expired_checkout')return {data:true};
-  if(name==='kgn_prepare_checkout')return options.stockError?{error:{message:'Not enough unreserved stock'}}:{data:{id}};
+  if(name==='kgn_prepare_checkout'||name==='kgn_prepare_phone_checkout')return options.stockError?{error:{message:'Not enough unreserved stock'}}:{data:{id}};
   if(name==='kgn_claim_checkout_payment')return options.invalidKey?{error:{message:'Order ID or secure key is incorrect'}}:{data:options.claim||{amount:33000,expire_by:expiry}};
   throw Error('Unexpected RPC '+name);
  },from:table=>({update:values=>{writes.push({table,values});const q={eq:()=>q,select:()=>q,maybeSingle:async()=>({data:{id},error:null}),then:resolve=>Promise.resolve({error:null}).then(resolve)};return q}})};
@@ -32,6 +32,10 @@ const request=(body={},origin='https://waquarahmad622-lgtm.github.io')=>new Requ
  f=fixture({timeout:true});assert.equal((await f.handler(request())).status,502);assert.equal(f.posts(),1);assert.equal(f.writes.at(-1).values.payment_link_state,'uncertain');
  f=fixture({link:{amount:1}});assert.equal((await f.handler(request())).status,502);assert.equal(f.writes.at(-1).values.payment_link_state,'uncertain');
  f=fixture({link:{short_url:'https://attacker.example/pay'}});assert.equal((await f.handler(request())).status,502);
+ const phoneRequest=()=>{const r=request({phone_verification:true,buyer:{phone:'9000000000'},phone_user_id:'attacker-supplied-user'});r.headers.set('Authorization','Bearer sms-session');return r};
+ f=fixture();assert.equal((await f.handler(request({phone_verification:true}))).status,401);assert.equal(f.posts(),0);
+ for(const opts of [{authError:true},{user:{id:'other',phone:'919111111111',phone_confirmed_at:new Date().toISOString()}},{user:{id:'unconfirmed',phone:'919000000000'}}]){f=fixture(opts);assert.equal((await f.handler(phoneRequest())).status,401);assert.equal(f.posts(),0);assert.ok(!f.calls.some(x=>x.name==='kgn_prepare_phone_checkout'))}
+ f=fixture();assert.equal((await f.handler(phoneRequest())).status,200);assert.equal(f.calls.find(x=>x.authJWT).authJWT,'sms-session');assert.equal(f.calls.find(x=>x.name==='kgn_prepare_phone_checkout').args.p_phone_user,'verified-user');assert.ok(!JSON.stringify(f.calls.find(x=>x.gatewayBody)).includes('sms-session'));
  const stale=[{id,payment_link_id:'plink_expired',payment_link_state:'ready',amount:33000}];
  const link={id:'plink_expired',reference_id:id,currency:'INR',amount:33000,amount_paid:0,status:'expired',payments:[]};
  f=fixture({stale,expiredLink:link,claim:{paid:true}});await f.handler(request({id}));assert.ok(f.calls.some(x=>x.name==='kgn_release_expired_checkout'));
