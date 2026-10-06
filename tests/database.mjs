@@ -46,4 +46,38 @@ await check('cannot skip delivery stage',()=>assert.rejects(()=>manage(o.id,'del
 await manage(o.id,'out_for_delivery');await manage(o.id,'delivered');
 await db.exec('reset role');
 await check('closed order retention removes events too',async()=>{await db.query("update kgn_orders set updated_at=now()-interval '366 days' where id=$1",[o.id]);assert.equal((await db.query('select kgn_purge_closed_orders()::int as n')).rows[0].n,1);assert.equal((await db.query('select count(*)::int as n from kgn_order_events')).rows[0].n,0)});
+
+// Direct checkout: the caller cannot supply a price, reserve unavailable stock,
+// see another customer's checkout, or manufacture payment verification.
+await db.exec('set role service_role');
+const checkout=async(key='c'.repeat(64),line=lines,expected=60000)=>(await db.query('select kgn_prepare_checkout($1,$2,$3,$4,$5) as o',[JSON.stringify(buyer),JSON.stringify(line),key,'orders-v1-20261003',expected])).rows[0].o;
+await check('direct checkout stays gated until deployment',()=>assert.rejects(()=>checkout(),/not enabled/));
+await db.exec('reset role;update kgn_commerce_settings set direct_checkout_enabled=true;set role anon');
+await check('anonymous cannot call privileged checkout mutations',()=>assert.rejects(()=>checkout(),/permission denied/));
+await check('anonymous cannot expire somebody else stock reservation',()=>rejected('select kgn_release_expired_checkout($1,null)',[pid],/permission denied/));
+await db.exec('reset role;set role service_role');
+let direct;
+await check('direct checkout confirms atomically without an admin and excludes courier freight',async()=>{direct=await checkout();const row=(await db.query('select status,shipping_paise,checkout_mode,delivery_payment,payment_status from kgn_orders where id=$1',[direct.id])).rows[0];assert.deepEqual(row,{status:'confirmed',shipping_paise:0,checkout_mode:'direct',delivery_payment:'courier_collect',payment_status:'unpaid'});assert.equal(direct.subtotal_paise,60000)});
+await check('checkout retry reuses order and reservation',async()=>{assert.equal((await checkout()).id,direct.id);assert.equal((await db.query('select count(*)::int as n from kgn_orders')).rows[0].n,1)});
+await check('stale or manipulated displayed subtotal is rejected without an order',async()=>{await assert.rejects(()=>checkout('d'.repeat(64),lines,1),/total changed/);assert.equal((await db.query('select count(*)::int as n from kgn_orders')).rows[0].n,1)});
+await check('direct checkout considers stock already reserved by unpaid orders',()=>assert.rejects(()=>checkout('d'.repeat(64),[{...lines[0],bundles:17}],510000),/unreserved stock/));
+await db.exec('reset role;update products set stock_qty=null;set role service_role');
+await check('uncounted stock cannot be charged automatically',()=>assert.rejects(()=>checkout('d'.repeat(64)),/Stock availability/));
+await db.exec('reset role;update products set stock_qty=54;set role service_role');
+await check('wrong private key cannot open checkout payment',()=>rejected('select kgn_claim_checkout_payment($1,$2)',[direct.id,'e'.repeat(64)],/incorrect/));
+await check('old admin link path cannot bypass direct checkout expiry',()=>rejected('select kgn_claim_payment_link($1)',[direct.id],/private customer checkout/));
+await check('direct claim returns only trusted total and a bounded expiry',async()=>{const claim=(await db.query('select kgn_claim_checkout_payment($1,$2) as c',[direct.id,'c'.repeat(64)])).rows[0].c;assert.equal(claim.amount,60000);assert.ok(claim.expire_by>Date.now()/1000+1700);assert.ok(claim.expire_by<Date.now()/1000+1900)});
+await check('second direct claim cannot create a duplicate payment link',()=>rejected('select kgn_claim_checkout_payment($1,$2)',[direct.id,'c'.repeat(64)],/store verification/));
+await db.query("update kgn_orders set payment_link_state='ready',payment_link_id='plink_direct',payment_url='https://rzp.io/direct' where id=$1",[direct.id]);
+await check('same key resumes the existing link',async()=>{const claim=(await db.query('select kgn_claim_checkout_payment($1,$2) as c',[direct.id,'c'.repeat(64)])).rows[0].c;assert.equal(claim.url,'https://rzp.io/direct');assert.equal(claim.existing,true)});
+await check('direct order payment still requires exact gateway verification',async()=>{await rejected('select kgn_verify_payment($1,$2,$3,$4,$5)',[direct.id,'plink_direct','pay_direct',1,'INR'],/does not match/);await db.query('select kgn_verify_payment($1,$2,$3,$4,$5)',[direct.id,'plink_direct','pay_direct',60000,'INR'])});
+await check('paid direct checkout resumes to tracking without another payment',async()=>assert.equal((await db.query('select kgn_claim_checkout_payment($1,$2) as c',[direct.id,'c'.repeat(64)])).rows[0].c.paid,true));
+const abandoned=await checkout('d'.repeat(64));
+await db.query("update kgn_orders set checkout_expires_at=now()-interval '36 minutes',payment_link_state='ready',payment_link_id='plink_expired' where id=$1",[abandoned.id]);
+await check('expired candidates are leased once, excluding paid and manual orders',async()=>{const rows=(await db.query('select kgn_checkout_expiry_candidates() as x')).rows[0].x;assert.equal(rows.length,1);assert.equal(rows[0].id,abandoned.id);assert.deepEqual((await db.query('select kgn_checkout_expiry_candidates() as x')).rows[0].x,[])});
+await check('wrong link and paid orders cannot be released',async()=>{assert.equal((await db.query('select kgn_release_expired_checkout($1,$2) as x',[abandoned.id,'plink_wrong'])).rows[0].x,false);assert.equal((await db.query('select kgn_release_expired_checkout($1,$2) as x',[direct.id,'plink_direct'])).rows[0].x,false)});
+await check('gateway-confirmed expiry releases reservation without a stock sale',async()=>{assert.equal((await db.query('select kgn_release_expired_checkout($1,$2) as x',[abandoned.id,'plink_expired'])).rows[0].x,true);await db.exec('reset role');assert.equal((await db.query('select stock_qty from products')).rows[0].stock_qty,54);assert.equal((await db.query('select count(*)::int as n from stock_audit')).rows[0].n,1);await db.exec('set role service_role')});
+await check('released quantity is available while paid quantity stays reserved',async()=>{await checkout('e'.repeat(64),[{...lines[0],bundles:16}],480000);await assert.rejects(()=>checkout('f'.repeat(64),[{...lines[0],bundles:1}],30000),/unreserved stock/)});
+await db.exec('reset role;set role anon');
+await check('private customer tracking reports courier-collect policy without contact data',async()=>{const tracked=(await db.query('select kgn_track_order($1,$2) as o',[direct.id,'c'.repeat(64)])).rows[0].o;assert.equal(tracked.delivery_payment,'courier_collect');assert.equal(tracked.payment_status,'paid');assert.equal(tracked.payment_url,null);assert.ok(!('phone' in tracked))});
 console.log(`${passed} database/security scenarios passed`);await db.close();
