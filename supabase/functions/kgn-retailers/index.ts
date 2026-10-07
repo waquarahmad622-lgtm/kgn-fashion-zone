@@ -17,6 +17,32 @@ Deno.serve(async req=>{
   const raw=await req.text();if(raw.length>2800000)return reply({error:'Photo too large'},413);
   const body=JSON.parse(raw);if(!body||Array.isArray(body))return reply({error:'Invalid request'},400);
   const db=client();
+  if(body.action==='recoverPassword'){
+   const phone=clean(body.phone,10),code=clean(body.code,10),password=typeof body.password==='string'?body.password:'';
+   if(!/^[6-9][0-9]{9}$/.test(phone)||!/^\d{6,10}$/.test(code)||password.length<10||password.length>72||!/[A-Za-z]/.test(password)||!/[0-9]/.test(password))return reply({error:'Check recovery details'},400);
+   const ip=(req.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim();
+   for(const [value,limit] of [['recovery:phone:'+phone,10],['recovery:ip:'+ip,30],['recovery:global',100]] as const){
+    const {data,error}=await db.rpc('kgn_registration_limit',{p_key:await sha(value),p_limit:limit});
+    if(error)return reply({error:'Recovery unavailable'},503);
+    if(data!==true)return reply({error:'Too many attempts. Please try later'},429);
+   }
+   // Supabase consumes the expiring recovery code atomically. Never trust a
+   // caller-supplied user ID, an unverified phone number, or a normal login JWT.
+   const recovery=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_ANON_KEY')!,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+   const verified=await recovery.auth.verifyOtp({email:alias(phone),token:code,type:'recovery'});
+   if(verified.error||!verified.data.user||!verified.data.session)return reply({error:'Invalid or expired reset code'},400);
+   try{
+    const user=verified.data.user;
+    const target=await db.from('kgn_retailers').select('user_id').eq('user_id',user.id).eq('phone',phone).maybeSingle();
+    if(user.email!==alias(phone)||target.error||!target.data)return reply({error:'Invalid or expired reset code'},400);
+    const changed=await recovery.auth.updateUser({password});
+    if(changed.error)return reply({error:'Password not changed. Ask for a new reset code'},409);
+    return reply({reset:true});
+   }finally{
+    // Keep the recovery session server-side; customer explicitly logs in again.
+    await recovery.auth.signOut({scope:'global'}).catch(()=>{});
+   }
+  }
   if(body.action==='register'){
    const phone=clean(body.phone,10),password=typeof body.password==='string'?body.password:'';
    const shop=clean(body.shop_name,100),name=clean(body.contact_name,100),address=clean(body.address,500),city=clean(body.city,100),gst=clean(body.gst,15).toUpperCase();
@@ -89,6 +115,20 @@ Deno.serve(async req=>{
    if(updated.error||!updated.data?.length)return reply({error:'Photo removed; refresh and retry to finish updating the record'},503);
    return reply({deleted:true});
   }
+  if(body.action==='issueRecoveryCode'){
+   if(!uid)return reply({error:'Admin login required'},401);
+   const owner=await db.from('admin_users').select('user_id').eq('user_id',uid).maybeSingle();
+   if(owner.error||!owner.data)return reply({error:'Admin only'},403);
+   if(body.identity_checked!==true||typeof body.user_id!=='string'||!/^[0-9a-f-]{36}$/.test(body.user_id))return reply({error:'Verify the retailer identity first'},400);
+   const target=await db.from('kgn_retailers').select('user_id,phone').eq('user_id',body.user_id).maybeSingle();
+   if(target.error||!target.data)return reply({error:'Retailer not found'},404);
+   const limited=await db.rpc('kgn_registration_limit',{p_key:await sha('recovery:issue:'+target.data.user_id),p_limit:5});
+   if(limited.error||limited.data!==true)return reply({error:'Reset code limit reached. Try later'},429);
+   // Generates a code without sending email/SMS or changing the old password.
+   const generated=await db.auth.admin.generateLink({type:'recovery',email:alias(target.data.phone)});
+   if(generated.error||generated.data.user?.id!==target.data.user_id||!/^\d{6,10}$/.test(generated.data.properties?.email_otp||''))return reply({error:'Could not create reset code'},503);
+   return reply({code:generated.data.properties.email_otp});
+  }
   if(body.action==='resetPassword'){
    if(!uid)return reply({error:'Admin login required'},401);
    const owner=await db.from('admin_users').select('user_id').eq('user_id',uid).maybeSingle();
@@ -103,4 +143,5 @@ Deno.serve(async req=>{
   return reply({error:'Unknown request'},400);
  }catch{return reply({error:'Connection failed. Please try again'},503);}
 });
+ 
  
