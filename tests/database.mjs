@@ -49,7 +49,7 @@ await check('dispatch reduces stock exactly once',async()=>{await manage(o.id,'s
 await check('cannot skip delivery stage',()=>assert.rejects(()=>manage(o.id,'delivered'),/next order stage/));
 await manage(o.id,'out_for_delivery');await manage(o.id,'delivered');
 await db.exec('reset role');
-await check('closed order retention removes events too',async()=>{await db.query("update kgn_orders set updated_at=now()-interval '366 days' where id=$1",[o.id]);assert.equal((await db.query('select kgn_purge_closed_orders()::int as n')).rows[0].n,1);assert.equal((await db.query('select count(*)::int as n from kgn_order_events')).rows[0].n,0)});
+await check('closed order retention removes events too',async()=>{await db.query("update kgn_orders set updated_at=now()-interval '366 days' where id=$1",[o.id]);assert.equal((await db.query('select kgn_purge_closed_orders()::int as n')).rows[0].n,0,'An old updated_at must not purge a just-delivered order');await db.query("update kgn_orders set closed_at=now()-interval '1 year',delivered_at=now()-interval '1 year' where id=$1",[o.id]);assert.equal((await db.query('select kgn_purge_closed_orders()::int as n')).rows[0].n,1);assert.equal((await db.query('select count(*)::int as n from kgn_order_events')).rows[0].n,0)});
 
 // Direct checkout: the caller cannot supply a price, reserve unavailable stock,
 // see another customer's checkout, or manufacture payment verification.
@@ -123,5 +123,20 @@ await db.exec(`reset role;update kgn_retailers set status='blocked' where user_i
 await check('blocking access takes effect on the existing identity',async()=>assert.deepEqual((await db.query('select * from products')).rows,[]));
 await db.exec('reset role');
 await check('blocked retailer cannot use service checkout wrapper',()=>assert.rejects(()=>db.query('select kgn_prepare_retailer_checkout($1,$2,$3,$4,$5,$6,$7)',[JSON.stringify(buyer),JSON.stringify(lines),'4'.repeat(64),'orders-v1-20261003',60000,null,phoneUser]),/Retailer approval/));
+
+await db.exec(`insert into public.kgn_orders(id,tracking_hash,buyer_name,phone,address,city,pincode,items,subtotal_paise,shipping_paise,status,payment_method,payment_status,policy_version,closed_at,delivered_at,retention_hold)
+ select ('aaaaaaaa-aaaa-4aaa-8aaa-'||lpad(n::text,12,'0'))::uuid,sha256(convert_to('retention-'||n,'UTF8')),'Private Customer','9000000000','Private shop address','City','272175','[]',10000,0,
+ case when n=4 then 'confirmed' when n=5 then 'cancelled' else 'delivered' end,'online','paid','orders-v1-20261003',
+ case when n=3 then now()-interval '1 year'+interval '1 day' else now()-interval '1 year' end,now()-interval '1 year',n=2 from generate_series(1,5)n;
+ insert into public.kgn_order_events(order_id,status) values('aaaaaaaa-aaaa-4aaa-8aaa-000000000001','delivered');`);
+await check('retention switch off preserves all eligible records',async()=>{await db.exec('update kgn_commerce_settings set order_retention_enabled=false');assert.equal((await db.query('select kgn_purge_closed_orders()::int n')).rows[0].n,0);await db.exec('update kgn_commerce_settings set order_retention_enabled=true')});
+await check('one year cleanup removes eligible delivered and cancelled orders only',async()=>{assert.equal((await db.query('select kgn_purge_closed_orders()::int n')).rows[0].n,2);const ids=(await db.query("select id from kgn_orders where id::text like 'aaaaaaaa-%' order by id")).rows.map(r=>r.id.slice(-1));assert.deepEqual(ids,['2','3','4']);assert.equal((await db.query("select count(*)::int n from kgn_order_events where order_id='aaaaaaaa-aaaa-4aaa-8aaa-000000000001'")).rows[0].n,0)});
+await check('payment archive excludes all contact, line items and private tracking keys',async()=>{const r=(await db.query("select to_jsonb(t) row from private.kgn_payment_receipts t where order_id='aaaaaaaa-aaaa-4aaa-8aaa-000000000001'")).rows[0].row;assert.equal(r.subtotal_paise,10000);for(const k of ['buyer_name','phone','address','items','tracking_hash','retailer_user_id'])assert.ok(!(k in r));assert.equal((await db.query('select kgn_purge_closed_orders()::int n')).rows[0].n,0)});
+await db.exec(`set role authenticated;set request.jwt.claim.sub='${phoneUser}'`);
+await check('retailer cannot disable cleanup or alter another order hold',async()=>{await db.exec('update kgn_commerce_settings set order_retention_enabled=false');assert.equal((await db.query('select order_retention_enabled from kgn_commerce_settings')).rows[0].order_retention_enabled,true);assert.equal((await db.query("update kgn_orders set retention_hold=false returning id")).rows.length,0)});
+await check('customer cannot read encrypted Drive connections or call their service RPC',async()=>{await assert.rejects(()=>db.query('select * from private.kgn_drive_connections'),/permission denied/);await assert.rejects(()=>db.query('select kgn_drive_connection($1,$2)',[phoneUser,'get']),/permission denied/)});
+await check('owner-facing proof deletion cannot be forged by editing proof_path',()=>assert.rejects(()=>db.query("update kgn_retailers set proof_path=''"),/permission denied/));
+await db.exec('reset role');
 console.log(`${passed} database/security scenarios passed`);
 await db.close();
+  
