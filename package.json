@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.1.0",
   "scripts": {
-    "test": "node tests/catalogue.cjs && node tests/database.mjs && node tests/payments.cjs && node tests/direct-checkout.cjs && node tests/checkout-ui.cjs && node tests/phone-ui.cjs && node tests/retailers.cjs"
+    "test": "node tests/catalogue.cjs && node tests/database.mjs && node tests/payments.cjs && node tests/direct-checkout.cjs && node tests/checkout-ui.cjs && node tests/phone-ui.cjs && node tests/retailers.cjs && node tests/customer-data.cjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",
@@ -11,3 +11,4 @@
     "typescript": "^5.9.3"
   }
 }
+  
