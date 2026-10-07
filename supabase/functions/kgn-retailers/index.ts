@@ -52,7 +52,7 @@ Deno.serve(async req=>{
    uid=data.user.id;
   }
   if(body.action==='catalog'){
-   const profile=uid?await db.from('kgn_retailers').select('phone,shop_name,contact_name,address,city,status,review_note').eq('user_id',uid).maybeSingle():{data:null,error:null};
+   const profile=uid?await db.from('kgn_retailers').select('user_id,phone,shop_name,contact_name,address,city,status,review_note').eq('user_id',uid).maybeSingle():{data:null,error:null};
    if(profile.error)return reply({error:'Could not check retailer access'},503);
    const approved=profile.data?.status==='approved';
    // Explicit public projection: never spread an unrestricted product into a guest response.
@@ -70,6 +70,25 @@ Deno.serve(async req=>{
    }));
    return reply({products:rows,profile:profile.data,approved});
   }
+  if(body.action==='deleteProof'){
+   if(!uid)return reply({error:'Admin login required'},401);
+   const owner=await db.from('admin_users').select('user_id').eq('user_id',uid).maybeSingle();
+   if(owner.error||!owner.data)return reply({error:'Admin only'},403);
+   if(body.confirm!==true||typeof body.user_id!=='string'||!/^[0-9a-f-]{36}$/.test(body.user_id))return reply({error:'Confirm the selected retailer'},400);
+   const target=await db.from('kgn_retailers').select('user_id,status,proof_path').eq('user_id',body.user_id).maybeSingle();
+   if(target.error||!target.data)return reply({error:'Retailer not found'},404);
+   if(target.data.status!=='approved')return reply({error:'Approve the retailer before deleting their proof'},409);
+   const path=target.data.proof_path;
+   if(!path)return reply({deleted:true});
+   if(!path.startsWith(target.data.user_id+'/')||path.includes('..'))return reply({error:'Invalid document path'},409);
+   // Storage API removes the object bytes; deleting storage metadata with SQL does not.
+   const removed=await db.storage.from('retailer-documents').remove([path]);
+   if(removed.error)return reply({error:'Photo could not be deleted. Try again'},503);
+   // If the following update fails, retrying remove on the same path is safe.
+   const updated=await db.from('kgn_retailers').update({proof_path:'',proof_deleted_at:new Date().toISOString(),gst:'',review_note:''}).eq('user_id',target.data.user_id).eq('proof_path',path).select('user_id');
+   if(updated.error||!updated.data?.length)return reply({error:'Photo removed; refresh and retry to finish updating the record'},503);
+   return reply({deleted:true});
+  }
   if(body.action==='resetPassword'){
    if(!uid)return reply({error:'Admin login required'},401);
    const owner=await db.from('admin_users').select('user_id').eq('user_id',uid).maybeSingle();
@@ -84,3 +103,4 @@ Deno.serve(async req=>{
   return reply({error:'Unknown request'},400);
  }catch{return reply({error:'Connection failed. Please try again'},503);}
 });
+ 
