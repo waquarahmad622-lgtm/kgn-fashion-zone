@@ -8,3 +8,7 @@ verify_jwt = false # Guest creation is validated server-side; existing checkout 
 
 [functions.kgn-retailers]
 verify_jwt = false # Public catalogue/registration; user and admin actions validate JWT and database roles inside.
+
+[functions.kgn-backup]
+verify_jwt = false # Validates retailer JWT, exact origin and CSRF header before every action.
+  
