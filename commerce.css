@@ -26,3 +26,5 @@ body.kgn-gallery-open { overflow: hidden; }
 .kgn-gallery-thumbs button { width: 52px; height: 56px; }
 .kgn-gallery.kgn-dialog-fallback { position: fixed; top: 50%; left: 0; right: 0; margin: 0 auto; transform: translateY(-50%); }
 @media (max-height: 480px) { .kgn-gallery-viewport { height: 46vh; min-height: 120px; } }
+
+.kgn-data-actions{display:flex;flex-wrap:wrap;gap:10px}.kgn-data-actions>label{margin:0;cursor:pointer}.kgn-data-actions input[type=file]{display:block;max-width:220px;font-size:13px}.kgn-data-actions .btn,#kgnDriveControls .btn{white-space:normal;text-align:center}#kgnLocalReceipts{overflow-wrap:anywhere}#kgnLocalReceipts .btn{font-size:14px;min-height:38px}#kgnRememberRow input{width:auto;min-height:auto}
