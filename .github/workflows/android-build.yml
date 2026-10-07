@@ -25,12 +25,39 @@ jobs:
           mkdir android-app
           unzip -q kgn-android-source.zip -d android-app
           chmod +x android-app/gradlew
+      - name: Configure Android release 1.1.0
+        run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          root = Path('android-app')
+          app = root / 'app/build.gradle'
+          app.write_text(app.read_text().replace('versionCode 1', 'versionCode 2').replace('versionName "1.0.0"', 'versionName "1.1.0"'))
+          gradle = root / 'build.gradle'
+          gradle.write_text(gradle.read_text().replace('gradle:8.9.1', 'gradle:8.10.1').replace('jcenter()', 'mavenCentral()'))
+          icon = root / 'app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml'
+          icon.write_text(icon.read_text().replace('@android:color/white', '@color/kgn_launcher_background'))
+          colors = root / 'app/src/main/res/values/colors.xml'
+          colors.write_text(colors.read_text().replace('</resources>', '    <color name="kgn_launcher_background">#FFF400</color>\n</resources>'))
+          import json
+          manifest = root / 'twa-manifest.json'
+          data = json.loads(manifest.read_text())
+          data.update(appVersionName='1.1.0', appVersionCode=2, appVersion='1.1.0')
+          manifest.write_text(json.dumps(data, indent=2) + '\n')
+          readme = root / 'README.md'
+          readme.write_text(readme.read_text().replace('`1.0.0` (code `1`)', '`1.1.0` (code `2`)'))
+          Path('dist').mkdir()
+          with ZipFile('kgn-android-source.zip') as original, ZipFile('dist/kgn-android-source-v1.1.0.zip', 'w', ZIP_DEFLATED) as output:
+              for entry in original.infolist():
+                  if not entry.is_dir():
+                      output.writestr(entry.filename, (root / entry.filename).read_bytes())
+          PYCODE
       - name: Build and lint API 36 app
         working-directory: android-app
         run: ./gradlew --no-daemon bundleRelease assembleRelease lintRelease
       - name: Collect unsigned outputs and signing utility
         run: |
-          mkdir dist
+          mkdir -p dist
           cp android-app/app/build/outputs/bundle/release/app-release.aab dist/kgn-unsigned.aab
           cp android-app/app/build/outputs/apk/release/app-release-unsigned.apk dist/kgn-unsigned.apk
           cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" dist/apksigner.jar
@@ -38,7 +65,7 @@ jobs:
           sha256sum dist/* > dist/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: kgn-android-unsigned-v1
+          name: kgn-android-unsigned-v1.1.0
           path: dist/
           retention-days: 7
           if-no-files-found: error
