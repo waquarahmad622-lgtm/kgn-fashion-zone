@@ -14,6 +14,7 @@ permissions:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         app: [customer, admin]
     runs-on: ubuntu-24.04
@@ -64,6 +65,11 @@ jobs:
           if admin:
               for path in list((root / 'app/src/main').rglob('*.java')) + [app, android_manifest]:
                   path.write_text(path.read_text().replace(package, target_package))
+              old_java = root / 'app/src/main/java' / Path(package.replace('.', '/'))
+              admin_java = old_java / 'admin'
+              admin_java.mkdir()
+              for path in list(old_java.glob('*.java')):
+                  path.rename(admin_java / path.name)
               app.write_text(app.read_text()
                   .replace("launchUrl: '/kgn-fashion-zone/index.html'", "launchUrl: '/kgn-fashion-zone/admin.html'")
                   .replace("name: 'K.G.N. Fashion Zone'", "name: 'K.G.N. Fashion Zone Admin'")
